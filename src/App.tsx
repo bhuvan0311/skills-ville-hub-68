@@ -24,8 +24,8 @@ import SettingsPage from "@/pages/franchise/Settings";
 // Admin Pages
 import AdminDashboard from "@/pages/admin/Dashboard";
 import AdminFranchisesPage from "@/pages/admin/Franchises";
+import AdminProductsPage from "@/pages/admin/Products";
 import AdminAnalyticsPage from "@/pages/admin/Analytics";
-import AdminInventoryPage from "@/pages/admin/Inventory";
 import AdminPaymentsPage from "@/pages/admin/Payments";
 import AdminSettingsPage from "@/pages/admin/Settings";
 
@@ -64,8 +64,8 @@ const App = () => (
                 <Route element={<DashboardLayout />}>
                   <Route path="/admin/dashboard" element={<AdminDashboard />} />
                   <Route path="/admin/franchises" element={<AdminFranchisesPage />} />
+                  <Route path="/admin/products" element={<AdminProductsPage />} />
                   <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
-                  <Route path="/admin/inventory" element={<AdminInventoryPage />} />
                   <Route path="/admin/payments" element={<AdminPaymentsPage />} />
                   <Route path="/admin/settings" element={<AdminSettingsPage />} />
                 </Route>

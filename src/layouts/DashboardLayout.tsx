@@ -47,8 +47,8 @@ const franchiseNavItems = [
 const adminNavItems = [
   { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/admin/franchises', icon: Users, label: 'Franchises' },
-  { to: '/admin/analytics', icon: BarChart3, label: 'Analytics' },
-  { to: '/admin/inventory', icon: Package, label: 'Inventory' },
+  { to: '/admin/products', icon: Package, label: 'Product Catalog' },
+  { to: '/admin/analytics', icon: BarChart3, label: 'Reports' },
   { to: '/admin/payments', icon: CreditCard, label: 'Payments' },
   { to: '/admin/settings', icon: Settings, label: 'Settings' },
 ];
