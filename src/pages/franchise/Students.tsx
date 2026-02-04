@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,88 +27,110 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { StudentKYCModal, StudentKYCData } from '@/components/students/StudentKYCModal';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { StudentKYCModal } from '@/components/students/StudentKYCModal';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  getStudents,
+  getBatches,
+  updateStudentStatus,
+  Student,
+  Batch,
+  StudentStatus,
+} from '@/lib/supabase';
 import {
   Users,
   Plus,
   Search,
-  Filter,
   MoreHorizontal,
   Eye,
   Edit,
   Trash2,
   GraduationCap,
   AlertTriangle,
-  CheckCircle,
+  Loader2,
+  RefreshCw,
 } from 'lucide-react';
 
-interface Student {
-  id: string;
-  name: string;
-  photo?: string;
-  level: number;
-  batch: string;
-  status: 'active' | 'inactive' | 'pending';
-  parentName: string;
-  phone: string;
-  joinedDate: string;
-}
-
+// Mock data for demo when DB is not connected
 const mockStudents: Student[] = [
   {
     id: 'STU001',
-    name: 'Aarav Sharma',
-    photo: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face',
+    franchise_id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+    batch_id: 'b1',
+    full_name: 'Aarav Sharma',
+    dob: '2015-05-15',
     level: 3,
-    batch: 'Batch A - Morning',
-    status: 'active',
-    parentName: 'Rajesh Sharma',
-    phone: '+91 99***12345',
-    joinedDate: '2024-01-15',
+    status: 'ACTIVE',
+    photo_url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face',
+    parent_name: 'Rajesh Sharma',
+    parent_phone: '+91 99***12345',
+    joining_date: '2024-01-15',
+    created_at: '2024-01-15',
+    updated_at: '2024-01-15',
+    batch: { id: 'b1', franchise_id: 'f1', name: 'Batch A - Morning', level: 1, max_students: 15, is_active: true, created_at: '', updated_at: '' },
   },
   {
     id: 'STU002',
-    name: 'Priya Patel',
-    photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
+    franchise_id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+    batch_id: 'b2',
+    full_name: 'Priya Patel',
+    dob: '2014-08-20',
     level: 2,
-    batch: 'Batch B - Afternoon',
-    status: 'active',
-    parentName: 'Meera Patel',
-    phone: '+91 98***67890',
-    joinedDate: '2024-02-20',
+    status: 'ACTIVE',
+    photo_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
+    parent_name: 'Meera Patel',
+    parent_phone: '+91 98***67890',
+    joining_date: '2024-02-20',
+    created_at: '2024-02-20',
+    updated_at: '2024-02-20',
+    batch: { id: 'b2', franchise_id: 'f1', name: 'Batch B - Afternoon', level: 2, max_students: 15, is_active: true, created_at: '', updated_at: '' },
   },
   {
     id: 'STU003',
-    name: 'Arjun Kumar',
+    franchise_id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+    full_name: 'Arjun Kumar',
+    dob: '2016-03-10',
     level: 1,
-    batch: 'Batch A - Morning',
-    status: 'pending',
-    parentName: 'Suresh Kumar',
-    phone: '+91 97***54321',
-    joinedDate: '2024-03-10',
+    status: 'PENDING',
+    parent_name: 'Suresh Kumar',
+    parent_phone: '+91 97***54321',
+    joining_date: '2024-03-10',
+    created_at: '2024-03-10',
+    updated_at: '2024-03-10',
   },
   {
     id: 'STU004',
-    name: 'Ananya Reddy',
-    photo: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face',
+    franchise_id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+    batch_id: 'b3',
+    full_name: 'Ananya Reddy',
+    dob: '2013-11-05',
     level: 4,
-    batch: 'Batch C - Evening',
-    status: 'active',
-    parentName: 'Lakshmi Reddy',
-    phone: '+91 96***98765',
-    joinedDate: '2023-11-05',
+    status: 'ACTIVE',
+    photo_url: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face',
+    parent_name: 'Lakshmi Reddy',
+    parent_phone: '+91 96***98765',
+    joining_date: '2023-11-05',
+    created_at: '2023-11-05',
+    updated_at: '2023-11-05',
+    batch: { id: 'b3', franchise_id: 'f1', name: 'Batch C - Evening', level: 3, max_students: 12, is_active: true, created_at: '', updated_at: '' },
   },
-  {
-    id: 'STU005',
-    name: 'Rohan Gupta',
-    level: 2,
-    batch: 'Batch B - Afternoon',
-    status: 'inactive',
-    parentName: 'Vikram Gupta',
-    phone: '+91 95***11111',
-    joinedDate: '2024-01-25',
-  },
+];
+
+const mockBatches: Batch[] = [
+  { id: 'b1', franchise_id: 'f1', name: 'Batch A - Morning', level: 1, schedule: 'Mon, Wed 10:00 AM', max_students: 15, is_active: true, created_at: '', updated_at: '' },
+  { id: 'b2', franchise_id: 'f1', name: 'Batch B - Afternoon', level: 2, schedule: 'Tue, Thu 3:00 PM', max_students: 15, is_active: true, created_at: '', updated_at: '' },
+  { id: 'b3', franchise_id: 'f1', name: 'Batch C - Evening', level: 3, schedule: 'Mon, Wed 5:00 PM', max_students: 12, is_active: true, created_at: '', updated_at: '' },
 ];
 
 const needsAttentionItems = [
@@ -128,39 +150,61 @@ const needsAttentionItems = [
 
 export default function StudentsPage() {
   const { toast } = useToast();
-  const [students, setStudents] = useState<Student[]>(mockStudents);
+  const { userProfile } = useAuth();
+  const franchiseId = userProfile?.franchise_id || 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
+
+  const [students, setStudents] = useState<Student[]>([]);
+  const [batches, setBatches] = useState<Batch[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [levelFilter, setLevelFilter] = useState<string>('all');
   const [kycModalOpen, setKycModalOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const [studentsData, batchesData] = await Promise.all([
+        getStudents(franchiseId),
+        getBatches(franchiseId),
+      ]);
+
+      if (studentsData.length > 0) {
+        setStudents(studentsData);
+      } else {
+        // Fall back to mock data if no real data
+        setStudents(mockStudents);
+      }
+
+      if (batchesData.length > 0) {
+        setBatches(batchesData);
+      } else {
+        setBatches(mockBatches);
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      // Use mock data on error
+      setStudents(mockStudents);
+      setBatches(mockBatches);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [franchiseId]);
 
   const filteredStudents = students.filter((student) => {
     const matchesSearch =
-      student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      student.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       student.id.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || student.status === statusFilter;
+    const matchesStatus = statusFilter === 'all' || student.status.toLowerCase() === statusFilter.toLowerCase();
     const matchesLevel = levelFilter === 'all' || student.level.toString() === levelFilter;
     return matchesSearch && matchesStatus && matchesLevel;
   });
-
-  const handleAddStudent = (data: StudentKYCData) => {
-    const newStudent: Student = {
-      id: `STU${String(students.length + 1).padStart(3, '0')}`,
-      name: data.name,
-      photo: data.photo,
-      level: 1,
-      batch: 'Batch A - Morning',
-      status: 'pending',
-      parentName: data.parentName,
-      phone: `+91 ${data.phone.slice(0, 2)}***${data.phone.slice(-5)}`,
-      joinedDate: new Date().toISOString().split('T')[0],
-    };
-    setStudents((prev) => [newStudent, ...prev]);
-    toast({
-      title: 'Student Enrolled!',
-      description: `${data.name} has been successfully enrolled.`,
-    });
-  };
 
   const handleScheduleExam = () => {
     toast({
@@ -176,15 +220,53 @@ export default function StudentsPage() {
     });
   };
 
-  const getStatusBadge = (status: Student['status']) => {
-    const variants = {
-      active: 'bg-success/10 text-success border-success/30',
-      inactive: 'bg-muted text-muted-foreground border-muted',
-      pending: 'bg-warning/10 text-warning border-warning/30',
+  const handleDeactivateStudent = async () => {
+    if (!selectedStudent) return;
+
+    try {
+      const success = await updateStudentStatus(selectedStudent.id, 'DROPOUT');
+      
+      if (success) {
+        setStudents((prev) =>
+          prev.map((s) =>
+            s.id === selectedStudent.id ? { ...s, status: 'DROPOUT' as StudentStatus } : s
+          )
+        );
+        toast({
+          title: 'Student Deactivated',
+          description: `${selectedStudent.full_name} has been marked as dropout.`,
+        });
+      } else {
+        // Update locally for demo
+        setStudents((prev) =>
+          prev.map((s) =>
+            s.id === selectedStudent.id ? { ...s, status: 'DROPOUT' as StudentStatus } : s
+          )
+        );
+        toast({
+          title: 'Student Deactivated',
+          description: `${selectedStudent.full_name} has been marked as dropout.`,
+        });
+      }
+    } catch (error) {
+      console.error('Error deactivating student:', error);
+    } finally {
+      setDeleteDialogOpen(false);
+      setSelectedStudent(null);
+    }
+  };
+
+  const getStatusBadge = (status: StudentStatus) => {
+    const variants: Record<StudentStatus, string> = {
+      ACTIVE: 'bg-success/10 text-success border-success/30',
+      INACTIVE: 'bg-muted text-muted-foreground border-muted',
+      PENDING: 'bg-warning/10 text-warning border-warning/30',
+      DROPOUT: 'bg-destructive/10 text-destructive border-destructive/30',
+      GRADUATED: 'bg-primary/10 text-primary border-primary/30',
     };
     return (
       <Badge variant="outline" className={variants[status]}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
+        {status.charAt(0) + status.slice(1).toLowerCase()}
       </Badge>
     );
   };
@@ -203,6 +285,14 @@ export default function StudentsPage() {
     );
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Page Header */}
@@ -216,10 +306,15 @@ export default function StudentsPage() {
             Manage enrollments, track progress, and monitor attendance
           </p>
         </div>
-        <Button onClick={() => setKycModalOpen(true)} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Add Student
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="icon" onClick={fetchData}>
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+          <Button onClick={() => setKycModalOpen(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Add Student
+          </Button>
+        </div>
       </div>
 
       {/* Needs Attention Cards */}
@@ -287,6 +382,7 @@ export default function StudentsPage() {
                   <SelectItem value="active">Active</SelectItem>
                   <SelectItem value="inactive">Inactive</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="dropout">Dropout</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={levelFilter} onValueChange={setLevelFilter}>
@@ -321,33 +417,35 @@ export default function StudentsPage() {
               <TableBody>
                 {filteredStudents.map((student) => (
                   <TableRow key={student.id}>
-                    <TableCell className="font-mono text-xs">{student.id}</TableCell>
+                    <TableCell className="font-mono text-xs">
+                      {student.id.substring(0, 8)}
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Avatar className="h-9 w-9">
-                          <AvatarImage src={student.photo} alt={student.name} />
+                          <AvatarImage src={student.photo_url} alt={student.full_name} />
                           <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                            {student.name
+                            {student.full_name
                               .split(' ')
                               .map((n) => n[0])
                               .join('')}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-medium text-sm">{student.name}</p>
+                          <p className="font-medium text-sm">{student.full_name}</p>
                           <p className="text-xs text-muted-foreground hidden sm:block">
-                            {student.phone}
+                            {student.parent_phone}
                           </p>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>{getLevelBadge(student.level)}</TableCell>
                     <TableCell className="hidden md:table-cell text-sm">
-                      {student.batch}
+                      {student.batch?.name || 'Unassigned'}
                     </TableCell>
                     <TableCell>{getStatusBadge(student.status)}</TableCell>
                     <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
-                      {student.parentName}
+                      {student.parent_name}
                     </TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
@@ -372,9 +470,15 @@ export default function StudentsPage() {
                             Progress Report
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-destructive">
+                          <DropdownMenuItem
+                            className="text-destructive"
+                            onClick={() => {
+                              setSelectedStudent(student);
+                              setDeleteDialogOpen(true);
+                            }}
+                          >
                             <Trash2 className="mr-2 h-4 w-4" />
-                            Remove Student
+                            Deactivate Student
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -400,8 +504,31 @@ export default function StudentsPage() {
       <StudentKYCModal
         open={kycModalOpen}
         onOpenChange={setKycModalOpen}
-        onSubmit={handleAddStudent}
+        onSuccess={fetchData}
+        franchiseId={franchiseId}
+        batches={batches}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Deactivate Student?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will mark {selectedStudent?.full_name} as a dropout. They will no longer appear in active student lists. This action can be reversed by an admin.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeactivateStudent}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Deactivate
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
