@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Moon, Sun, Eye, EyeOff, GraduationCap, Loader2 } from 'lucide-react';
+import { Moon, Sun, Eye, EyeOff, Loader2 } from 'lucide-react';
+import skillsVilleLogo from '@/assets/skills-ville-logo.svg';
 import { z } from 'zod';
 
 const emailSchema = z.string().email('Please enter a valid email address');
@@ -132,9 +133,7 @@ export default function AuthPage() {
       {/* Header */}
       <header className="w-full p-4 flex justify-between items-center">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center shadow-glow">
-            <GraduationCap className="h-6 w-6 text-primary-foreground" />
-          </div>
+          <img src={skillsVilleLogo} alt="Skills Ville" className="h-12 w-12" />
           <div>
             <h1 className="text-lg font-bold text-foreground">Skills Ville</h1>
             <p className="text-xs text-muted-foreground">Abacus Academy</p>
