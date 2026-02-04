@@ -334,3 +334,221 @@ export async function deleteStudentPhoto(
 
   return true;
 }
+
+// ============================================
+// Inventory & Products Functions
+// ============================================
+
+export type OrderStatus = 'PLACED' | 'DISPATCHED' | 'DELIVERED' | 'CANCELLED';
+
+export interface Product {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  image_url?: string;
+  category: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface FranchiseInventory {
+  id: string;
+  franchise_id: string;
+  product_id: string;
+  quantity: number;
+  low_stock_limit: number;
+  product?: Product;
+}
+
+export interface Order {
+  id: string;
+  franchise_id: string;
+  total_amount: number;
+  status: OrderStatus;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface OrderItem {
+  id: string;
+  order_id: string;
+  product_id: string;
+  quantity: number;
+  unit_price: number;
+  product?: Product;
+}
+
+export async function getProducts(): Promise<Product[]> {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('is_active', true)
+    .order('name');
+
+  if (error) {
+    console.error('Error fetching products:', error);
+    return [];
+  }
+
+  return data as Product[];
+}
+
+export async function getFranchiseInventory(franchiseId: string): Promise<FranchiseInventory[]> {
+  const { data, error } = await supabase
+    .from('franchise_inventory')
+    .select(`
+      *,
+      product:products(*)
+    `)
+    .eq('franchise_id', franchiseId);
+
+  if (error) {
+    console.error('Error fetching franchise inventory:', error);
+    return [];
+  }
+
+  return data as FranchiseInventory[];
+}
+
+export async function getProductsWithInventory(franchiseId: string): Promise<(Product & { quantity: number; low_stock_limit: number })[]> {
+  // First get all products
+  const { data: products, error: productError } = await supabase
+    .from('products')
+    .select('*')
+    .eq('is_active', true)
+    .order('name');
+
+  if (productError) {
+    console.error('Error fetching products:', productError);
+    return [];
+  }
+
+  // Then get inventory for this franchise
+  const { data: inventory, error: invError } = await supabase
+    .from('franchise_inventory')
+    .select('*')
+    .eq('franchise_id', franchiseId);
+
+  if (invError) {
+    console.error('Error fetching inventory:', invError);
+  }
+
+  // Merge products with inventory
+  const inventoryMap = new Map((inventory || []).map(inv => [inv.product_id, inv]));
+  
+  return (products || []).map(product => ({
+    ...product,
+    quantity: inventoryMap.get(product.id)?.quantity || 0,
+    low_stock_limit: inventoryMap.get(product.id)?.low_stock_limit || 5,
+  }));
+}
+
+export async function getFranchiseOrders(franchiseId: string): Promise<Order[]> {
+  const { data, error } = await supabase
+    .from('orders')
+    .select('*')
+    .eq('franchise_id', franchiseId)
+    .order('created_at', { ascending: false })
+    .limit(10);
+
+  if (error) {
+    console.error('Error fetching orders:', error);
+    return [];
+  }
+
+  return data as Order[];
+}
+
+export async function createOrder(
+  franchiseId: string,
+  items: { productId: string; quantity: number; unitPrice: number }[],
+  totalAmount: number
+): Promise<Order | null> {
+  // Create the order
+  const { data: order, error: orderError } = await supabase
+    .from('orders')
+    .insert({
+      franchise_id: franchiseId,
+      total_amount: totalAmount,
+      status: 'PLACED',
+    })
+    .select()
+    .single();
+
+  if (orderError) {
+    console.error('Error creating order:', orderError);
+    throw orderError;
+  }
+
+  // Create order items
+  const orderItems = items.map(item => ({
+    order_id: order.id,
+    product_id: item.productId,
+    quantity: item.quantity,
+    unit_price: item.unitPrice,
+  }));
+
+  const { error: itemsError } = await supabase
+    .from('order_items')
+    .insert(orderItems);
+
+  if (itemsError) {
+    console.error('Error creating order items:', itemsError);
+  }
+
+  // Create a finance ledger entry for this order
+  const invoiceId = `INV-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`;
+  
+  const { error: ledgerError } = await supabase
+    .from('finance_ledger')
+    .insert({
+      franchise_id: franchiseId,
+      invoice_id: invoiceId,
+      type: 'KIT_PURCHASE',
+      description: `Order #${order.id.substring(0, 8)}`,
+      amount: totalAmount,
+      status: 'PENDING',
+      due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    });
+
+  if (ledgerError) {
+    console.error('Error creating ledger entry:', ledgerError);
+  }
+
+  return order as Order;
+}
+
+export async function getActiveStudentCount(franchiseId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from('students')
+    .select('*', { count: 'exact', head: true })
+    .eq('franchise_id', franchiseId)
+    .eq('status', 'ACTIVE');
+
+  if (error) {
+    console.error('Error counting students:', error);
+    return 0;
+  }
+
+  return count || 0;
+}
+
+export async function getTotalKitStock(franchiseId: string): Promise<number> {
+  const { data, error } = await supabase
+    .from('franchise_inventory')
+    .select(`
+      quantity,
+      product:products!inner(category)
+    `)
+    .eq('franchise_id', franchiseId)
+    .eq('product.category', 'kit');
+
+  if (error) {
+    console.error('Error getting kit stock:', error);
+    return 0;
+  }
+
+  return (data || []).reduce((sum, inv) => sum + (inv.quantity || 0), 0);
+}
