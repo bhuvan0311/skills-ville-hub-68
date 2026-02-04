@@ -24,13 +24,14 @@ export interface Product {
 interface ProductCardProps {
   product: Product;
   onRestock: (productId: string) => void;
+  lowStockLimit?: number;
 }
 
 const levelOptions = ['Level 1', 'Level 2', 'Level 3', 'Level 4', 'Level 5', 'Level 6', 'Level 7', 'Level 8'];
 const sizeOptions = ['XS', 'S', 'M', 'L', 'XL'];
 
-export function ProductCard({ product, onRestock }: ProductCardProps) {
-  const isLowStock = product.stock < 10;
+export function ProductCard({ product, onRestock, lowStockLimit = 10 }: ProductCardProps) {
+  const isLowStock = product.stock < lowStockLimit;
 
   return (
     <Card className="bg-card border shadow-sm hover:shadow-md transition-shadow">
