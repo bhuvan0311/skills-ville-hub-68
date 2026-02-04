@@ -53,6 +53,43 @@ export interface FinanceLedgerEntry {
   payment_link?: string;
 }
 
+export type StudentStatus = 'ACTIVE' | 'INACTIVE' | 'PENDING' | 'DROPOUT' | 'GRADUATED';
+
+export interface Student {
+  id: string;
+  franchise_id: string;
+  batch_id?: string;
+  full_name: string;
+  dob?: string;
+  level: number;
+  status: StudentStatus;
+  photo_url?: string;
+  parent_name?: string;
+  parent_phone: string;
+  parent_email?: string;
+  address?: string;
+  joining_date: string;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+  // Joined data
+  batch?: Batch;
+}
+
+export interface Batch {
+  id: string;
+  franchise_id: string;
+  name: string;
+  level: number;
+  schedule?: string;
+  max_students: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  // Computed
+  student_count?: number;
+}
+
 export async function getUserRole(userId: string): Promise<UserRole | null> {
   const { data, error } = await supabase
     .from('user_roles')
@@ -111,4 +148,189 @@ export async function getTotalOutstandingDues(franchiseId: string): Promise<numb
   }
 
   return data.reduce((sum, entry) => sum + Number(entry.amount), 0);
+}
+
+// ============================================
+// Batch Functions
+// ============================================
+
+export async function getBatches(franchiseId: string): Promise<Batch[]> {
+  const { data, error } = await supabase
+    .from('batches')
+    .select('*')
+    .eq('franchise_id', franchiseId)
+    .eq('is_active', true)
+    .order('name');
+
+  if (error) {
+    console.error('Error fetching batches:', error);
+    return [];
+  }
+
+  return data as Batch[];
+}
+
+export async function getBatchesWithStudentCount(franchiseId: string): Promise<Batch[]> {
+  const { data: batches, error: batchError } = await supabase
+    .from('batches')
+    .select('*')
+    .eq('franchise_id', franchiseId)
+    .eq('is_active', true)
+    .order('name');
+
+  if (batchError) {
+    console.error('Error fetching batches:', batchError);
+    return [];
+  }
+
+  // Get student counts for each batch
+  const batchesWithCounts = await Promise.all(
+    (batches || []).map(async (batch) => {
+      const { count } = await supabase
+        .from('students')
+        .select('*', { count: 'exact', head: true })
+        .eq('batch_id', batch.id)
+        .neq('status', 'DROPOUT');
+
+      return {
+        ...batch,
+        student_count: count || 0,
+      };
+    })
+  );
+
+  return batchesWithCounts;
+}
+
+// ============================================
+// Student Functions
+// ============================================
+
+export async function getStudents(franchiseId: string): Promise<Student[]> {
+  const { data, error } = await supabase
+    .from('students')
+    .select(`
+      *,
+      batch:batches(id, name, level, schedule)
+    `)
+    .eq('franchise_id', franchiseId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching students:', error);
+    return [];
+  }
+
+  return data as Student[];
+}
+
+export async function createStudent(studentData: {
+  franchise_id: string;
+  full_name: string;
+  dob?: string;
+  level?: number;
+  batch_id?: string;
+  parent_name?: string;
+  parent_phone: string;
+  parent_email?: string;
+  address?: string;
+  photo_url?: string;
+}): Promise<Student | null> {
+  const { data, error } = await supabase
+    .from('students')
+    .insert({
+      ...studentData,
+      status: 'PENDING',
+      level: studentData.level || 1,
+      joining_date: new Date().toISOString().split('T')[0],
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating student:', error);
+    throw error;
+  }
+
+  return data as Student;
+}
+
+export async function updateStudentStatus(
+  studentId: string,
+  status: StudentStatus
+): Promise<boolean> {
+  const { error } = await supabase
+    .from('students')
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq('id', studentId);
+
+  if (error) {
+    console.error('Error updating student status:', error);
+    return false;
+  }
+
+  return true;
+}
+
+export async function updateStudent(
+  studentId: string,
+  updates: Partial<Student>
+): Promise<boolean> {
+  const { error } = await supabase
+    .from('students')
+    .update({ ...updates, updated_at: new Date().toISOString() })
+    .eq('id', studentId);
+
+  if (error) {
+    console.error('Error updating student:', error);
+    return false;
+  }
+
+  return true;
+}
+
+// ============================================
+// Storage Functions
+// ============================================
+
+export async function uploadStudentPhoto(
+  franchiseId: string,
+  studentId: string,
+  file: File
+): Promise<string | null> {
+  const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+  const fileName = `${franchiseId}/${studentId}.${fileExt}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('student-photos')
+    .upload(fileName, file, {
+      upsert: true,
+      contentType: file.type,
+    });
+
+  if (uploadError) {
+    console.error('Error uploading photo:', uploadError);
+    throw uploadError;
+  }
+
+  const { data: urlData } = supabase.storage
+    .from('student-photos')
+    .getPublicUrl(fileName);
+
+  return urlData.publicUrl;
+}
+
+export async function deleteStudentPhoto(
+  franchiseId: string,
+  studentId: string
+): Promise<boolean> {
+  // Try common extensions
+  const extensions = ['jpg', 'jpeg', 'png', 'webp'];
+  
+  for (const ext of extensions) {
+    const fileName = `${franchiseId}/${studentId}.${ext}`;
+    await supabase.storage.from('student-photos').remove([fileName]);
+  }
+
+  return true;
 }

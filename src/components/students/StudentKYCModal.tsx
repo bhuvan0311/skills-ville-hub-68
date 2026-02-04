@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -10,14 +10,24 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Camera, Upload, X, Loader2 } from 'lucide-react';
+import { Camera, Upload, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Batch, createStudent, uploadStudentPhoto } from '@/lib/supabase';
 
 interface StudentKYCModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: StudentKYCData) => void;
+  onSuccess: () => void;
+  franchiseId: string;
+  batches: Batch[];
 }
 
 export interface StudentKYCData {
@@ -25,43 +35,99 @@ export interface StudentKYCData {
   parentName: string;
   dateOfBirth: string;
   phone: string;
+  email?: string;
+  batchId?: string;
   photo?: string;
+  photoFile?: File;
 }
 
-export function StudentKYCModal({ open, onOpenChange, onSubmit }: StudentKYCModalProps) {
+export function StudentKYCModal({ 
+  open, 
+  onOpenChange, 
+  onSuccess,
+  franchiseId,
+  batches 
+}: StudentKYCModalProps) {
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<StudentKYCData>({
     name: '',
     parentName: '',
     dateOfBirth: '',
     phone: '',
+    email: '',
+    batchId: undefined,
     photo: undefined,
+    photoFile: undefined,
   });
   const [errors, setErrors] = useState<Partial<Record<keyof StudentKYCData, string>>>({});
 
+  // Reset form when modal opens
+  useEffect(() => {
+    if (open) {
+      setFormData({
+        name: '',
+        parentName: '',
+        dateOfBirth: '',
+        phone: '',
+        email: '',
+        batchId: undefined,
+        photo: undefined,
+        photoFile: undefined,
+      });
+      setErrors({});
+    }
+  }, [open]);
+
   const handlePhotoCapture = () => {
-    // Simulate camera capture
+    // Simulate camera capture with a placeholder
     toast({
       title: 'Camera Activated',
-      description: 'Camera capture simulated. Photo would be captured here.',
+      description: 'Camera capture simulated. In production, this would open the camera.',
     });
     setFormData((prev) => ({
       ...prev,
       photo: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face',
+      photoFile: undefined,
     }));
   };
 
   const handlePhotoUpload = () => {
-    // Simulate file upload
-    toast({
-      title: 'Gallery Opened',
-      description: 'File picker simulated. Image would be uploaded here.',
-    });
-    setFormData((prev) => ({
-      ...prev,
-      photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-    }));
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+        toast({
+          title: 'Invalid file type',
+          description: 'Please upload a JPG, PNG, or WebP image.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: 'File too large',
+          description: 'Please upload an image smaller than 5MB.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Create preview URL
+      const previewUrl = URL.createObjectURL(file);
+      setFormData((prev) => ({
+        ...prev,
+        photo: previewUrl,
+        photoFile: file,
+      }));
+    }
   };
 
   const validateForm = () => {
@@ -91,21 +157,69 @@ export function StudentKYCModal({ open, onOpenChange, onSubmit }: StudentKYCModa
     if (!validateForm()) return;
 
     setIsSubmitting(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsSubmitting(false);
 
-    onSubmit(formData);
-    onOpenChange(false);
-    
-    // Reset form
-    setFormData({
-      name: '',
-      parentName: '',
-      dateOfBirth: '',
-      phone: '',
-      photo: undefined,
-    });
+    try {
+      // Create the student record first
+      const newStudent = await createStudent({
+        franchise_id: franchiseId,
+        full_name: formData.name.trim(),
+        dob: formData.dateOfBirth || undefined,
+        parent_name: formData.parentName.trim(),
+        parent_phone: `+91${formData.phone.replace(/\D/g, '')}`,
+        parent_email: formData.email?.trim() || undefined,
+        batch_id: formData.batchId || undefined,
+        level: 1,
+      });
+
+      if (!newStudent) {
+        throw new Error('Failed to create student record');
+      }
+
+      // Upload photo if present
+      if (formData.photoFile && newStudent.id) {
+        try {
+          const photoUrl = await uploadStudentPhoto(
+            franchiseId,
+            newStudent.id,
+            formData.photoFile
+          );
+
+          if (photoUrl) {
+            // Update student with photo URL
+            const { supabase } = await import('@/lib/supabase');
+            await supabase
+              .from('students')
+              .update({ photo_url: photoUrl })
+              .eq('id', newStudent.id);
+          }
+        } catch (photoError) {
+          console.error('Photo upload failed:', photoError);
+          // Continue anyway - student was created
+          toast({
+            title: 'Photo upload failed',
+            description: 'Student enrolled but photo could not be uploaded.',
+            variant: 'destructive',
+          });
+        }
+      }
+
+      toast({
+        title: 'Student Enrolled!',
+        description: `${formData.name} has been successfully enrolled.`,
+      });
+
+      onSuccess();
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Error creating student:', error);
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to enroll student',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleClose = () => {
@@ -132,6 +246,13 @@ export function StudentKYCModal({ open, onOpenChange, onSubmit }: StudentKYCModa
                 {formData.name ? formData.name[0].toUpperCase() : '?'}
               </AvatarFallback>
             </Avatar>
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleFileChange}
+              className="hidden"
+            />
             <div className="flex gap-2">
               <Button
                 type="button"
@@ -209,6 +330,36 @@ export function StudentKYCModal({ open, onOpenChange, onSubmit }: StudentKYCModa
                 />
               </div>
               {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email">Parent Email (Optional)</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="parent@example.com"
+                value={formData.email}
+                onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="batch">Assign Batch (Optional)</Label>
+              <Select
+                value={formData.batchId}
+                onValueChange={(value) => setFormData((prev) => ({ ...prev, batchId: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a batch" />
+                </SelectTrigger>
+                <SelectContent>
+                  {batches.map((batch) => (
+                    <SelectItem key={batch.id} value={batch.id}>
+                      {batch.name} (Level {batch.level})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
