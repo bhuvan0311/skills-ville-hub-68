@@ -3,6 +3,7 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { SidebarNavItem } from '@/components/SidebarNavItem';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -30,6 +31,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Bell,
+  Megaphone,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import skillsVilleLogo from '@/assets/skills-ville-logo.svg';
@@ -48,6 +50,7 @@ const adminNavItems = [
   { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/admin/franchises', icon: Users, label: 'Franchises' },
   { to: '/admin/products', icon: Package, label: 'Product Catalog' },
+  { to: '/admin/broadcasts', icon: Megaphone, label: 'Broadcasts' },
   { to: '/admin/analytics', icon: BarChart3, label: 'Reports' },
   { to: '/admin/payments', icon: CreditCard, label: 'Payments' },
   { to: '/admin/settings', icon: Settings, label: 'Settings' },
@@ -188,11 +191,17 @@ export function DashboardLayout() {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Notifications */}
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-1 right-1 h-2 w-2 bg-destructive rounded-full" />
-            </Button>
+            {/* Notifications - Only for Franchise Owners */}
+            {userRole === 'franchise_owner' && (
+              <NotificationBell />
+            )}
+            
+            {/* Admin Bell - simple version */}
+            {userRole === 'super_admin' && (
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell className="h-5 w-5" />
+              </Button>
+            )}
 
             {/* Theme Toggle */}
             <Button variant="ghost" size="icon" onClick={toggleTheme}>

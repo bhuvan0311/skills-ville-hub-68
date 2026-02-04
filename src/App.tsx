@@ -25,6 +25,7 @@ import SettingsPage from "@/pages/franchise/Settings";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import AdminFranchisesPage from "@/pages/admin/Franchises";
 import AdminProductsPage from "@/pages/admin/Products";
+import AdminBroadcastsPage from "@/pages/admin/Broadcasts";
 import AdminAnalyticsPage from "@/pages/admin/Analytics";
 import AdminPaymentsPage from "@/pages/admin/Payments";
 import AdminSettingsPage from "@/pages/admin/Settings";
@@ -65,6 +66,7 @@ const App = () => (
                   <Route path="/admin/dashboard" element={<AdminDashboard />} />
                   <Route path="/admin/franchises" element={<AdminFranchisesPage />} />
                   <Route path="/admin/products" element={<AdminProductsPage />} />
+                  <Route path="/admin/broadcasts" element={<AdminBroadcastsPage />} />
                   <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
                   <Route path="/admin/payments" element={<AdminPaymentsPage />} />
                   <Route path="/admin/settings" element={<AdminSettingsPage />} />

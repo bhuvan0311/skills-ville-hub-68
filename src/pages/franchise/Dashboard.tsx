@@ -3,6 +3,7 @@ import { KPICard } from '@/components/dashboard/KPICard';
 import { HealthGauge } from '@/components/dashboard/HealthGauge';
 import { ActivityFeed, ActivityItem } from '@/components/dashboard/ActivityFeed';
 import { RetentionChart } from '@/components/dashboard/RetentionChart';
+import { HQNewsWidget } from '@/components/dashboard/HQNewsWidget';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -115,10 +116,11 @@ export default function FranchiseDashboard() {
         />
       </div>
 
-      {/* Charts and Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Charts, Activity, and HQ News */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <RetentionChart data={retentionData} className="lg:col-span-2" />
         <ActivityFeed activities={mockActivities} />
+        <HQNewsWidget />
       </div>
 
       {/* Needs Attention Section */}
