@@ -14,7 +14,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
-  GraduationCap,
   LayoutDashboard,
   Users,
   Package,
@@ -33,6 +32,7 @@ import {
   Bell,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import skillsVilleLogo from '@/assets/skills-ville-logo.svg';
 
 const franchiseNavItems = [
   { to: '/franchise/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -89,9 +89,7 @@ export function DashboardLayout() {
         {/* Logo */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center shadow-glow shrink-0">
-              <GraduationCap className="h-6 w-6 text-primary-foreground" />
-            </div>
+            <img src={skillsVilleLogo} alt="Skills Ville" className="h-10 w-10 shrink-0" />
             {!sidebarCollapsed && (
               <div className="animate-fade-in">
                 <h1 className="text-sm font-bold text-foreground">Skills Ville</h1>
@@ -142,9 +140,7 @@ export function DashboardLayout() {
           <aside className="absolute left-0 top-0 bottom-0 w-72 bg-sidebar border-r border-sidebar-border animate-slide-in-right">
             <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center">
-                  <GraduationCap className="h-6 w-6 text-primary-foreground" />
-                </div>
+                <img src={skillsVilleLogo} alt="Skills Ville" className="h-10 w-10" />
                 <div>
                   <h1 className="text-sm font-bold">Skills Ville</h1>
                   <p className="text-xs text-muted-foreground">Abacus Academy</p>
