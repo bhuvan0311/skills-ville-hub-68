@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Table,
   TableBody,
@@ -10,239 +11,298 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { useToast } from '@/hooks/use-toast';
-import { IndianRupee, FileText, AlertTriangle, CreditCard } from 'lucide-react';
+import { PaymentModal } from '@/components/payments/PaymentModal';
+import { 
+  IndianRupee, 
+  FileText, 
+  AlertCircle, 
+  Clock, 
+  CheckCircle2,
+  ExternalLink,
+  Filter
+} from 'lucide-react';
 
-interface PaymentRecord {
+type InvoiceStatus = 'OVERDUE' | 'PENDING' | 'PAID';
+type InvoiceType = 'FRANCHISE_FEE' | 'KIT_PURCHASE';
+
+interface LedgerEntry {
   id: string;
-  date: string;
   invoiceId: string;
-  category: 'Franchise Fee' | 'Material Cost';
+  date: string;
+  type: InvoiceType;
   description: string;
   amount: number;
-  status: 'paid' | 'pending' | 'overdue';
+  status: InvoiceStatus;
+  dueDate: string;
 }
 
-const mockPayments: PaymentRecord[] = [
+// Mock ledger data
+const mockLedgerData: LedgerEntry[] = [
   {
     id: '1',
-    date: '2024-01-15',
     invoiceId: 'INV-2024-001',
-    category: 'Franchise Fee',
-    description: 'Jan Franchise Fee',
+    date: '2024-01-15',
+    type: 'FRANCHISE_FEE',
+    description: 'January Franchise Fee',
     amount: 10000,
-    status: 'overdue',
+    status: 'OVERDUE',
+    dueDate: 'Jan 31, 2024',
   },
   {
     id: '2',
-    date: '2024-01-20',
     invoiceId: 'INV-2024-002',
-    category: 'Material Cost',
+    date: '2024-01-20',
+    type: 'KIT_PURCHASE',
     description: 'Kit Order #405',
     amount: 5000,
-    status: 'pending',
+    status: 'PENDING',
+    dueDate: 'Feb 10, 2024',
   },
   {
     id: '3',
+    invoiceId: 'INV-2023-045',
     date: '2023-12-15',
-    invoiceId: 'INV-2023-012',
-    category: 'Franchise Fee',
-    description: 'Dec Franchise Fee',
+    type: 'FRANCHISE_FEE',
+    description: 'December Franchise Fee',
     amount: 10000,
-    status: 'paid',
+    status: 'PAID',
+    dueDate: 'Dec 31, 2023',
+  },
+  {
+    id: '4',
+    invoiceId: 'INV-2023-042',
+    date: '2023-12-10',
+    type: 'KIT_PURCHASE',
+    description: 'Kit Order #398',
+    amount: 3500,
+    status: 'PAID',
+    dueDate: 'Dec 25, 2023',
+  },
+  {
+    id: '5',
+    invoiceId: 'INV-2023-040',
+    date: '2023-11-15',
+    type: 'FRANCHISE_FEE',
+    description: 'November Franchise Fee',
+    amount: 10000,
+    status: 'PAID',
+    dueDate: 'Nov 30, 2023',
   },
 ];
 
+const statusConfig: Record<InvoiceStatus, { badge: string; class: string; icon: React.ComponentType<{ className?: string }> }> = {
+  OVERDUE: {
+    badge: 'OVERDUE',
+    class: 'bg-destructive/10 text-destructive border-destructive/30',
+    icon: AlertCircle,
+  },
+  PENDING: {
+    badge: 'PENDING',
+    class: 'bg-warning/10 text-warning border-warning/30',
+    icon: Clock,
+  },
+  PAID: {
+    badge: 'PAID',
+    class: 'bg-success/10 text-success border-success/30',
+    icon: CheckCircle2,
+  },
+};
+
 export default function PaymentsPage() {
-  const { toast } = useToast();
+  const [ledgerData, setLedgerData] = useState<LedgerEntry[]>(mockLedgerData);
+  const [activeFilter, setActiveFilter] = useState<'all' | 'FRANCHISE_FEE' | 'KIT_PURCHASE'>('all');
+  const [selectedInvoice, setSelectedInvoice] = useState<LedgerEntry | null>(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
-  const totalOutstanding = mockPayments
-    .filter((p) => p.status !== 'paid')
-    .reduce((sum, p) => sum + p.amount, 0);
+  // Calculate totals
+  const totalOutstanding = ledgerData
+    .filter((entry) => entry.status !== 'PAID')
+    .reduce((sum, entry) => sum + entry.amount, 0);
 
-  const overdueCount = mockPayments.filter((p) => p.status === 'overdue').length;
-  const pendingCount = mockPayments.filter((p) => p.status === 'pending').length;
+  const overdueCount = ledgerData.filter((entry) => entry.status === 'OVERDUE').length;
+  const pendingCount = ledgerData.filter((entry) => entry.status === 'PENDING').length;
 
-  const handlePayNow = (invoiceId: string) => {
-    toast({
-      title: 'Payment Initiated',
-      description: `Redirecting to payment gateway for ${invoiceId}...`,
-    });
+  // Filter data based on active filter
+  const filteredData = ledgerData.filter((entry) => {
+    if (activeFilter === 'all') return true;
+    return entry.type === activeFilter;
+  });
+
+  const handlePayNow = (entry: LedgerEntry) => {
+    setSelectedInvoice(entry);
+    setShowPaymentModal(true);
   };
 
-  const handleViewReceipt = (invoiceId: string) => {
-    toast({
-      title: 'Opening Receipt',
-      description: `Downloading receipt for ${invoiceId}...`,
-    });
-  };
-
-  const getStatusBadge = (status: PaymentRecord['status']) => {
-    switch (status) {
-      case 'overdue':
-        return (
-          <Badge variant="destructive" className="font-semibold">
-            OVERDUE
-          </Badge>
-        );
-      case 'pending':
-        return (
-          <Badge variant="outline" className="bg-warning/10 text-warning border-warning/30 font-semibold">
-            PENDING
-          </Badge>
-        );
-      case 'paid':
-        return (
-          <Badge variant="outline" className="bg-success/10 text-success border-success/30 font-semibold">
-            PAID
-          </Badge>
-        );
-    }
-  };
-
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    });
+  const handlePaymentComplete = (invoiceId: string) => {
+    setLedgerData((prev) =>
+      prev.map((entry) =>
+        entry.invoiceId === invoiceId ? { ...entry, status: 'PAID' as InvoiceStatus } : entry
+      )
+    );
   };
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Page Header */}
+      {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-          <CreditCard className="h-6 w-6" />
-          Pending Payments
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          View and manage your pending dues and payment history
-        </p>
+        <h1 className="text-2xl font-bold">Pending Payments</h1>
+        <p className="text-muted-foreground">Manage your franchise invoices and dues</p>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="bg-card border shadow-sm">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-xl bg-destructive/10 flex items-center justify-center">
-                <IndianRupee className="h-6 w-6 text-destructive" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Outstanding</p>
-                <p className="text-2xl font-bold text-destructive">
-                  ₹{totalOutstanding.toLocaleString()}
-                </p>
-              </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="bg-white dark:bg-card border-l-4 border-l-destructive">
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="p-3 rounded-full bg-destructive/10">
+              <IndianRupee className="h-6 w-6 text-destructive" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Total Outstanding Dues</p>
+              <p className="text-2xl font-bold text-destructive">
+                ₹{totalOutstanding.toLocaleString('en-IN')}
+              </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-card border shadow-sm">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-xl bg-warning/10 flex items-center justify-center">
-                <AlertTriangle className="h-6 w-6 text-warning" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Overdue Invoices</p>
-                <p className="text-2xl font-bold text-warning">{overdueCount}</p>
-              </div>
+        <Card className="bg-white dark:bg-card">
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="p-3 rounded-full bg-warning/10">
+              <Clock className="h-6 w-6 text-warning" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Pending Invoices</p>
+              <p className="text-2xl font-bold">{pendingCount}</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-card border shadow-sm">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                <FileText className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Pending Invoices</p>
-                <p className="text-2xl font-bold text-primary">{pendingCount}</p>
-              </div>
+        <Card className="bg-white dark:bg-card">
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="p-3 rounded-full bg-destructive/10">
+              <AlertCircle className="h-6 w-6 text-destructive" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Overdue Invoices</p>
+              <p className="text-2xl font-bold text-destructive">{overdueCount}</p>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Ledger Table */}
-      <Card className="bg-card border shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-base font-semibold">Payment Ledger</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead className="font-semibold">Date</TableHead>
-                  <TableHead className="font-semibold">Invoice ID</TableHead>
-                  <TableHead className="font-semibold">Category</TableHead>
-                  <TableHead className="font-semibold">Description</TableHead>
-                  <TableHead className="font-semibold text-right">Amount</TableHead>
-                  <TableHead className="font-semibold">Status</TableHead>
-                  <TableHead className="font-semibold text-right">Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {mockPayments.map((payment) => (
-                  <TableRow key={payment.id} className="hover:bg-muted/30">
-                    <TableCell className="text-sm">
-                      {formatDate(payment.date)}
-                    </TableCell>
-                    <TableCell className="font-mono text-sm">
-                      {payment.invoiceId}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary" className="font-normal">
-                        {payment.category}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm font-medium">
-                      {payment.description}
-                    </TableCell>
-                    <TableCell className="text-right font-semibold">
-                      ₹{payment.amount.toLocaleString()}
-                    </TableCell>
-                    <TableCell>{getStatusBadge(payment.status)}</TableCell>
-                    <TableCell className="text-right">
-                      {payment.status === 'paid' ? (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleViewReceipt(payment.invoiceId)}
-                        >
-                          View Receipt
-                        </Button>
-                      ) : (
-                        <Button
-                          size="sm"
-                          onClick={() => handlePayNow(payment.invoiceId)}
-                        >
-                          Pay Now
-                        </Button>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+      {/* Filter Tabs */}
+      <Card className="bg-white dark:bg-card">
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-primary" />
+              Invoice Ledger
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">Filter by:</span>
+            </div>
           </div>
+        </CardHeader>
+        <CardContent>
+          <Tabs value={activeFilter} onValueChange={(v) => setActiveFilter(v as typeof activeFilter)}>
+            <TabsList className="mb-4">
+              <TabsTrigger value="all">Show All</TabsTrigger>
+              <TabsTrigger value="FRANCHISE_FEE">Franchise Fee</TabsTrigger>
+              <TabsTrigger value="KIT_PURCHASE">Kit Fee</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value={activeFilter} className="mt-0">
+              <div className="rounded-lg border overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50">
+                      <TableHead>Date</TableHead>
+                      <TableHead>Invoice ID</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredData.map((entry) => {
+                      const config = statusConfig[entry.status];
+                      const StatusIcon = config.icon;
+                      
+                      return (
+                        <TableRow key={entry.id}>
+                          <TableCell className="font-medium">
+                            {new Date(entry.date).toLocaleDateString('en-IN', {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric',
+                            })}
+                          </TableCell>
+                          <TableCell className="font-mono text-sm">
+                            {entry.invoiceId}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="font-normal">
+                              {entry.type === 'FRANCHISE_FEE' ? 'Franchise Fee' : 'Material Cost'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="font-semibold">
+                            ₹{entry.amount.toLocaleString('en-IN')}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className={`gap-1 ${config.class}`}>
+                              <StatusIcon className="h-3 w-3" />
+                              {config.badge}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {entry.status !== 'PAID' ? (
+                              <Button
+                                size="sm"
+                                onClick={() => handlePayNow(entry)}
+                                className="shadow-glow"
+                              >
+                                Pay Now
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="gap-1 text-muted-foreground"
+                              >
+                                <ExternalLink className="h-3 w-3" />
+                                View Receipt
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 
-      {/* Payment Note */}
-      <Card className="bg-muted/50 border-dashed">
-        <CardContent className="p-4">
-          <p className="text-sm text-muted-foreground text-center">
-            💡 Payments are processed securely via Razorpay. For any queries, contact{' '}
-            <span className="text-primary font-medium">accounts@skillsville.in</span>
-          </p>
-        </CardContent>
-      </Card>
+      {/* Payment Modal */}
+      <PaymentModal
+        open={showPaymentModal}
+        onOpenChange={setShowPaymentModal}
+        invoice={
+          selectedInvoice
+            ? {
+                id: selectedInvoice.invoiceId,
+                type: selectedInvoice.type,
+                amount: selectedInvoice.amount,
+                dueDate: selectedInvoice.dueDate,
+              }
+            : null
+        }
+        onPaymentComplete={handlePaymentComplete}
+      />
     </div>
   );
 }

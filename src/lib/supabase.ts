@@ -15,7 +15,6 @@ export type UserRole = 'super_admin' | 'franchise_owner';
 
 export interface UserProfile {
   id: string;
-  user_id: string;
   full_name: string;
   avatar_url?: string;
   phone?: string;
@@ -28,6 +27,30 @@ export interface UserRoleRecord {
   id: string;
   user_id: string;
   role: UserRole;
+}
+
+export interface Franchise {
+  id: string;
+  franchise_code: string;
+  name: string;
+  city: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  is_active: boolean;
+}
+
+export interface FinanceLedgerEntry {
+  id: string;
+  franchise_id: string;
+  invoice_id: string;
+  type: 'FRANCHISE_FEE' | 'KIT_PURCHASE';
+  description?: string;
+  amount: number;
+  status: 'PENDING' | 'PAID' | 'OVERDUE';
+  due_date: string;
+  paid_at?: string;
+  payment_link?: string;
 }
 
 export async function getUserRole(userId: string): Promise<UserRole | null> {
@@ -49,7 +72,7 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
   const { data, error } = await supabase
     .from('profiles')
     .select('*')
-    .eq('user_id', userId)
+    .eq('id', userId)
     .single();
 
   if (error || !data) {
@@ -58,4 +81,34 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
   }
 
   return data as UserProfile;
+}
+
+export async function getFinanceLedger(franchiseId: string): Promise<FinanceLedgerEntry[]> {
+  const { data, error } = await supabase
+    .from('finance_ledger')
+    .select('*')
+    .eq('franchise_id', franchiseId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching finance ledger:', error);
+    return [];
+  }
+
+  return data as FinanceLedgerEntry[];
+}
+
+export async function getTotalOutstandingDues(franchiseId: string): Promise<number> {
+  const { data, error } = await supabase
+    .from('finance_ledger')
+    .select('amount')
+    .eq('franchise_id', franchiseId)
+    .neq('status', 'PAID');
+
+  if (error) {
+    console.error('Error fetching outstanding dues:', error);
+    return 0;
+  }
+
+  return data.reduce((sum, entry) => sum + Number(entry.amount), 0);
 }
