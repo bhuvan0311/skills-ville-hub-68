@@ -62,10 +62,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         getUserRole(userId),
         getUserProfile(userId),
       ]);
-      setUserRole(role);
+      // Default to franchise_owner if no role found (tables may not exist yet)
+      setUserRole(role || 'franchise_owner');
       setUserProfile(profile);
     } catch (error) {
       console.error('Error fetching user data:', error);
+      // Default to franchise_owner on error so user can still login
+      setUserRole('franchise_owner');
     } finally {
       setIsLoading(false);
     }
