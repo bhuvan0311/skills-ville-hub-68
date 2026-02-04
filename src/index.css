@@ -7,7 +7,7 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 210 20% 98%;
     --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
@@ -16,9 +16,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    /* Vivid Azure Blue - brighter primary */
-    --primary: 217 91% 60%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 221 83% 53%;
+    --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96%;
     --secondary-foreground: 222 47% 11%;
@@ -26,39 +25,39 @@
     --muted: 210 40% 96%;
     --muted-foreground: 215 16% 47%;
 
-    /* Saturated Orange accent */
-    --accent: 25 95% 53%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 38 92% 50%;
+    --accent-foreground: 222 47% 11%;
 
     --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive-foreground: 210 40% 98%;
 
     --success: 142 76% 36%;
-    --success-foreground: 0 0% 100%;
+    --success-foreground: 210 40% 98%;
 
     --warning: 38 92% 50%;
     --warning-foreground: 222 47% 11%;
 
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 217 91% 60%;
+    --ring: 221 83% 53%;
 
     --radius: 0.75rem;
 
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 240 5% 26%;
-    --sidebar-primary: 217 91% 60%;
-    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-primary: 221 83% 53%;
+    --sidebar-primary-foreground: 0 0% 98%;
     --sidebar-accent: 210 40% 96%;
     --sidebar-accent-foreground: 240 6% 10%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217 91% 60%;
+    --sidebar-ring: 221 83% 53%;
 
-    /* Vibrant mesh gradient backgrounds - Blue-50 top-left, White center, Orange-100 bottom-right */
-    --gradient-mesh-1: radial-gradient(ellipse at 0% 0%, hsl(214 95% 93%) 0%, transparent 50%),
-                       radial-gradient(ellipse at 100% 100%, hsl(34 100% 92%) 0%, transparent 50%),
-                       radial-gradient(ellipse at 50% 50%, hsl(0 0% 100%) 0%, transparent 70%);
-    --gradient-mesh-2: linear-gradient(135deg, hsl(214 95% 95%) 0%, hsl(0 0% 100%) 50%, hsl(34 100% 94%) 100%);
+    /* Mesh gradient backgrounds */
+    --gradient-mesh-1: radial-gradient(at 0% 0%, hsl(221 83% 95%) 0px, transparent 50%),
+                       radial-gradient(at 100% 0%, hsl(38 92% 95%) 0px, transparent 50%),
+                       radial-gradient(at 100% 100%, hsl(210 40% 98%) 0px, transparent 50%),
+                       radial-gradient(at 0% 100%, hsl(221 83% 97%) 0px, transparent 50%);
+    --gradient-mesh-2: linear-gradient(135deg, hsl(221 83% 97%) 0%, hsl(210 20% 98%) 50%, hsl(38 92% 98%) 100%);
   }
 
   .dark {
@@ -71,8 +70,8 @@
     --popover: 222 47% 11%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 217 91% 60%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 221 83% 53%;
+    --primary-foreground: 210 40% 98%;
 
     --secondary: 217 33% 17%;
     --secondary-foreground: 210 40% 98%;
@@ -80,8 +79,8 @@
     --muted: 217 33% 17%;
     --muted-foreground: 215 20% 65%;
 
-    --accent: 25 95% 53%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 38 92% 50%;
+    --accent-foreground: 210 40% 98%;
 
     --destructive: 0 63% 31%;
     --destructive-foreground: 210 40% 98%;
@@ -94,22 +93,23 @@
 
     --border: 217 33% 17%;
     --input: 217 33% 17%;
-    --ring: 217 91% 60%;
+    --ring: 221 83% 53%;
 
     --sidebar-background: 222 47% 8%;
     --sidebar-foreground: 240 5% 95%;
-    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary: 221 83% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 217 33% 15%;
     --sidebar-accent-foreground: 240 5% 95%;
     --sidebar-border: 217 33% 17%;
-    --sidebar-ring: 217 91% 60%;
+    --sidebar-ring: 221 83% 53%;
 
     /* Dark mesh gradient backgrounds */
-    --gradient-mesh-1: radial-gradient(ellipse at 0% 0%, hsl(221 50% 15%) 0%, transparent 50%),
-                       radial-gradient(ellipse at 100% 100%, hsl(25 50% 12%) 0%, transparent 50%),
-                       radial-gradient(ellipse at 50% 50%, hsl(222 47% 10%) 0%, transparent 70%);
-    --gradient-mesh-2: linear-gradient(135deg, hsl(222 47% 10%) 0%, hsl(230 40% 12%) 50%, hsl(25 40% 11%) 100%);
+    --gradient-mesh-1: radial-gradient(at 0% 0%, hsl(221 50% 15%) 0px, transparent 50%),
+                       radial-gradient(at 100% 0%, hsl(240 30% 12%) 0px, transparent 50%),
+                       radial-gradient(at 100% 100%, hsl(222 47% 10%) 0px, transparent 50%),
+                       radial-gradient(at 0% 100%, hsl(230 40% 14%) 0px, transparent 50%);
+    --gradient-mesh-2: linear-gradient(135deg, hsl(222 47% 10%) 0%, hsl(230 40% 12%) 50%, hsl(240 30% 11%) 100%);
   }
 }
 
@@ -123,27 +123,25 @@
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
 
-  /* Vibrant mesh gradient background utility */
+  /* Mesh gradient background utility */
   .bg-mesh {
     background: var(--gradient-mesh-1), var(--gradient-mesh-2);
     background-color: hsl(var(--background));
-    background-attachment: fixed;
   }
 
   .bg-mesh-subtle {
     background: var(--gradient-mesh-2);
     background-color: hsl(var(--background));
-    background-attachment: fixed;
   }
 }
 
 @layer utilities {
   .glass {
-    @apply backdrop-blur-xl bg-card border border-border shadow-md;
+    @apply backdrop-blur-xl bg-card/80 border border-border/50;
   }
 
   .glass-strong {
-    @apply backdrop-blur-2xl bg-card border border-border shadow-lg;
+    @apply backdrop-blur-2xl bg-card/90 border border-border/60;
   }
 
   .text-gradient {
@@ -151,15 +149,10 @@
   }
 
   .shadow-glow {
-    box-shadow: 0 0 40px -10px hsl(var(--primary) / 0.4);
+    box-shadow: 0 0 40px -10px hsl(var(--primary) / 0.3);
   }
 
   .shadow-glow-accent {
-    box-shadow: 0 0 40px -10px hsl(var(--accent) / 0.4);
-  }
-
-  /* Pure white card with stronger shadow */
-  .card-elevated {
-    @apply bg-card shadow-md border border-border/50;
+    box-shadow: 0 0 40px -10px hsl(var(--accent) / 0.3);
   }
 }

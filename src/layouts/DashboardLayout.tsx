@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
+  GraduationCap,
   LayoutDashboard,
   Users,
   Package,
@@ -32,7 +33,6 @@ import {
   Bell,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import skillsVilleLogo from '@/assets/SkillsVilleLogo.png';
 
 const franchiseNavItems = [
   { to: '/franchise/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -89,14 +89,15 @@ export function DashboardLayout() {
         {/* Logo */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border">
           <div className="flex items-center gap-3">
-            <img 
-              src={skillsVilleLogo} 
-              alt="Skills Ville" 
-              className={cn(
-                "object-contain transition-all",
-                sidebarCollapsed ? "h-8 w-auto" : "h-10 w-auto max-w-[180px]"
-              )}
-            />
+            <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center shadow-glow shrink-0">
+              <GraduationCap className="h-6 w-6 text-primary-foreground" />
+            </div>
+            {!sidebarCollapsed && (
+              <div className="animate-fade-in">
+                <h1 className="text-sm font-bold text-foreground">Skills Ville</h1>
+                <p className="text-xs text-muted-foreground">Abacus Academy</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -138,13 +139,17 @@ export function DashboardLayout() {
             className="absolute inset-0 bg-background/80 backdrop-blur-sm"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <aside className="absolute left-0 top-0 bottom-0 w-72 bg-card shadow-lg border-r border-sidebar-border animate-slide-in-right">
+          <aside className="absolute left-0 top-0 bottom-0 w-72 bg-sidebar border-r border-sidebar-border animate-slide-in-right">
             <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border">
-              <img 
-                src={skillsVilleLogo} 
-                alt="Skills Ville" 
-                className="h-10 w-auto max-w-[160px] object-contain"
-              />
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center">
+                  <GraduationCap className="h-6 w-6 text-primary-foreground" />
+                </div>
+                <div>
+                  <h1 className="text-sm font-bold">Skills Ville</h1>
+                  <p className="text-xs text-muted-foreground">Abacus Academy</p>
+                </div>
+              </div>
               <Button
                 variant="ghost"
                 size="icon"
