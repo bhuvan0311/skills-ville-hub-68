@@ -5,16 +5,24 @@ import { ActivityFeed, ActivityItem } from '@/components/dashboard/ActivityFeed'
 import { RetentionChart } from '@/components/dashboard/RetentionChart';
 import { HQNewsWidget } from '@/components/dashboard/HQNewsWidget';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Users, IndianRupee, AlertTriangle, GraduationCap, ArrowRight } from 'lucide-react';
+import { 
+  Users, 
+  IndianRupee, 
+  AlertTriangle, 
+  GraduationCap, 
+  Package,
+  Calendar,
+  FileText,
+  ChevronRight,
+} from 'lucide-react';
 
-// Mock data
+// Mock data with realistic Indian names
 const mockActivities: ActivityItem[] = [
   {
     id: '1',
     type: 'order',
-    message: 'Order #404 dispatched to Jayanagar Center',
+    message: 'Order #404 Dispatched to Jayanagar Center',
     timestamp: '2 minutes ago',
     status: 'success',
   },
@@ -42,16 +50,9 @@ const mockActivities: ActivityItem[] = [
   {
     id: '5',
     type: 'payment',
-    message: 'Payment of ₹5,000 received from Koramangala Center',
+    message: 'Payment of ₹5,000 received from parent',
     timestamp: '3 hours ago',
     status: 'success',
-  },
-  {
-    id: '6',
-    type: 'student',
-    message: 'Student Aarav marked absent - Parent notified',
-    timestamp: '4 hours ago',
-    status: 'info',
   },
 ];
 
@@ -68,7 +69,7 @@ const needsAttention = [
   {
     id: '1',
     title: 'Batch A completed 12 weeks',
-    description: 'Schedule level assessment exam',
+    description: 'Schedule Level 1 Exam for 8 students',
     actions: ['Schedule Exam', 'Remedial Class'],
   },
   {
@@ -90,7 +91,7 @@ export default function FranchiseDashboard() {
         </p>
       </div>
 
-      {/* KPI Cards Grid */}
+      {/* KPI Cards Grid - The Command Center */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
           title="Total Active Students"
@@ -116,14 +117,14 @@ export default function FranchiseDashboard() {
         />
       </div>
 
-      {/* Charts, Activity, and HQ News */}
+      {/* Charts, Activity, and HQ News - Main Visual Section */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <RetentionChart data={retentionData} className="lg:col-span-2" />
         <ActivityFeed activities={mockActivities} />
         <HQNewsWidget />
       </div>
 
-      {/* Needs Attention Section */}
+      {/* Needs Attention Section - Auto-Progression UI */}
       <div>
         <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <AlertTriangle className="h-5 w-5 text-warning" />
@@ -134,7 +135,7 @@ export default function FranchiseDashboard() {
             <Card key={item.id} className="border-warning/30 bg-warning/5">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base font-medium flex items-center gap-2">
-                  <GraduationCap className="h-4 w-4" />
+                  <GraduationCap className="h-4 w-4 text-warning" />
                   {item.title}
                 </CardTitle>
               </CardHeader>
@@ -159,23 +160,26 @@ export default function FranchiseDashboard() {
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { label: 'Add New Student', icon: Users },
-          { label: 'Schedule Class', icon: GraduationCap },
-          { label: 'Order Inventory', icon: AlertTriangle },
-          { label: 'View Reports', icon: ArrowRight },
-        ].map((action) => (
-          <Button
-            key={action.label}
-            variant="outline"
-            className="h-auto py-4 flex flex-col items-center gap-2 hover:bg-primary hover:text-primary-foreground transition-colors"
-          >
-            <action.icon className="h-5 w-5" />
-            <span>{action.label}</span>
-          </Button>
-        ))}
+      {/* Quick Actions - Clean Grid */}
+      <div>
+        <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {[
+            { label: 'Add Student', icon: Users, color: 'text-primary' },
+            { label: 'Schedule Class', icon: Calendar, color: 'text-success' },
+            { label: 'Order Inventory', icon: Package, color: 'text-warning' },
+            { label: 'View Reports', icon: FileText, color: 'text-accent' },
+          ].map((action) => (
+            <Button
+              key={action.label}
+              variant="outline"
+              className="h-auto py-4 flex flex-col items-center gap-2 bg-card hover:bg-primary hover:text-primary-foreground transition-all group"
+            >
+              <action.icon className={`h-5 w-5 ${action.color} group-hover:text-primary-foreground transition-colors`} />
+              <span className="text-sm font-medium">{action.label}</span>
+            </Button>
+          ))}
+        </div>
       </div>
     </div>
   );

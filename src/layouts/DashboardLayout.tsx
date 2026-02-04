@@ -81,16 +81,16 @@ export function DashboardLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-mesh flex w-full">
+    <div className="min-h-screen bg-background flex w-full">
       {/* Sidebar - Desktop */}
       <aside
         className={cn(
-          'hidden lg:flex flex-col border-r border-sidebar-border bg-sidebar/80 backdrop-blur-xl transition-all duration-300',
+          'hidden lg:flex flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300',
           sidebarCollapsed ? 'w-20' : 'w-64'
         )}
       >
         {/* Logo */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border">
+        <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border bg-card">
           <div className="flex items-center gap-3">
             <img src={skillsVilleLogo} alt="Skills Ville" className="h-10 w-10 shrink-0" />
             {!sidebarCollapsed && (
@@ -171,9 +171,9 @@ export function DashboardLayout() {
       )}
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 bg-background">
         {/* Header */}
-        <header className="h-16 border-b border-border bg-card/50 backdrop-blur-xl flex items-center justify-between px-4 lg:px-6 sticky top-0 z-40">
+        <header className="h-16 border-b border-border bg-card flex items-center justify-between px-4 lg:px-6 sticky top-0 z-40 shadow-soft">
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
@@ -252,7 +252,7 @@ export function DashboardLayout() {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto p-4 lg:p-6">
+        <main className="flex-1 overflow-auto p-4 lg:p-6 bg-background">
           <Outlet />
         </main>
       </div>
