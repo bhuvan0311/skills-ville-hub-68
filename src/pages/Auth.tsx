@@ -80,14 +80,17 @@ export default function AuthPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-mesh flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-mesh flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <header className="w-full p-4 flex justify-between items-center">
         <div className="flex items-center gap-3">
@@ -114,7 +117,7 @@ export default function AuthPage() {
       {/* Main Content */}
       <main className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-md animate-fade-in">
-          <Card className="glass-strong shadow-2xl border-0">
+          <Card className="shadow-soft-lg border bg-card">
             <CardHeader className="text-center pb-2">
               <div className="mx-auto mb-4 p-3 rounded-full bg-primary/10 w-fit">
                 <Shield className="h-8 w-8 text-primary" />
