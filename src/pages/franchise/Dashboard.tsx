@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { KPICard } from '@/components/dashboard/KPICard';
 import { HealthGauge } from '@/components/dashboard/HealthGauge';
 import { ActivityFeed, ActivityItem } from '@/components/dashboard/ActivityFeed';
@@ -81,6 +82,25 @@ const needsAttention = [
 ];
 
 export default function FranchiseDashboard() {
+  const navigate = useNavigate();
+
+  const handleQuickAction = (action: string) => {
+    switch (action) {
+      case 'Add Student':
+        navigate('/franchise/students');
+        break;
+      case 'Schedule Class':
+        navigate('/franchise/schedule');
+        break;
+      case 'Order Inventory':
+        navigate('/franchise/inventory');
+        break;
+      case 'View Reports':
+        navigate('/franchise/reports');
+        break;
+    }
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Page Header */}
@@ -176,6 +196,7 @@ export default function FranchiseDashboard() {
               key={action.label}
               variant="outline"
               className="h-auto py-4 flex flex-col items-center gap-2 bg-card hover:bg-primary hover:text-primary-foreground transition-all group"
+              onClick={() => handleQuickAction(action.label)}
             >
               <action.icon className={`h-5 w-5 ${action.color} group-hover:text-primary-foreground transition-colors`} />
               <span className="text-sm font-medium">{action.label}</span>
