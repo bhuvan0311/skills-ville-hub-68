@@ -1,8 +1,10 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Users, Clock, Calendar } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Users, Clock, GraduationCap } from 'lucide-react';
 
 interface BatchCardProps {
   id: string;
@@ -17,6 +19,7 @@ interface BatchCardProps {
 }
 
 export function BatchCard({
+  id,
   name,
   level,
   studentsPresent,
@@ -26,7 +29,13 @@ export function BatchCard({
   isActive,
   onClick,
 }: BatchCardProps) {
+  const navigate = useNavigate();
   const progress = (studentsPresent / totalStudents) * 100;
+
+  const handleExamClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/franchise/batches/${id}/exam`);
+  };
 
   return (
     <Card
@@ -60,6 +69,16 @@ export function BatchCard({
           </div>
           <Progress value={progress} className="h-2" />
         </div>
+
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full gap-2 mt-2"
+          onClick={handleExamClick}
+        >
+          <GraduationCap className="h-4 w-4" />
+          Enter Exam Marks
+        </Button>
       </CardContent>
     </Card>
   );

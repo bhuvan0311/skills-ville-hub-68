@@ -367,3 +367,63 @@ VALUES
   ('f47ac10b-58cc-4372-a567-0e02b2c3d479', 'INV-2024-002', 'KIT_PURCHASE', 'Kit Order #405', 5000.00, 'PENDING', '2024-02-10'),
   ('f47ac10b-58cc-4372-a567-0e02b2c3d479', 'INV-2023-045', 'FRANCHISE_FEE', 'December Franchise Fee', 10000.00, 'PAID', '2023-12-31'),
   ('f47ac10b-58cc-4372-a567-0e02b2c3d479', 'INV-2023-042', 'KIT_PURCHASE', 'Kit Order #398', 3500.00, 'PAID', '2023-12-25');
+
+-- ============================================
+-- Exam Results Table (Run this migration)
+-- ============================================
+
+-- Create certificate_status enum
+CREATE TYPE public.certificate_status AS ENUM ('PENDING', 'GENERATED', 'SHIPPED');
+
+-- Create exam_results table
+CREATE TABLE public.exam_results (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    student_id UUID REFERENCES public.students(id) ON DELETE CASCADE NOT NULL,
+    franchise_id UUID REFERENCES public.franchises(id) ON DELETE CASCADE NOT NULL,
+    level INTEGER NOT NULL,
+    marks_obtained NUMERIC(5, 2) NOT NULL,
+    total_marks NUMERIC(5, 2) DEFAULT 100,
+    is_passed BOOLEAN NOT NULL,
+    exam_date DATE DEFAULT CURRENT_DATE,
+    certificate_status certificate_status DEFAULT 'PENDING',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE public.exam_results ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies for exam_results
+CREATE POLICY "Franchise owners can view their exam results"
+ON public.exam_results FOR SELECT
+TO authenticated
+USING (
+  franchise_id = public.get_user_franchise_id(auth.uid())
+  OR public.has_role(auth.uid(), 'super_admin')
+);
+
+CREATE POLICY "Franchise owners can insert exam results for their students"
+ON public.exam_results FOR INSERT
+TO authenticated
+WITH CHECK (
+  franchise_id = public.get_user_franchise_id(auth.uid())
+  OR public.has_role(auth.uid(), 'super_admin')
+);
+
+CREATE POLICY "Franchise owners can update their exam results"
+ON public.exam_results FOR UPDATE
+TO authenticated
+USING (
+  franchise_id = public.get_user_franchise_id(auth.uid())
+  OR public.has_role(auth.uid(), 'super_admin')
+);
+
+CREATE POLICY "Super admins can manage all exam results"
+ON public.exam_results FOR ALL
+TO authenticated
+USING (public.has_role(auth.uid(), 'super_admin'));
+
+-- Create indexes
+CREATE INDEX idx_exam_results_student_id ON public.exam_results(student_id);
+CREATE INDEX idx_exam_results_franchise_id ON public.exam_results(franchise_id);
+CREATE INDEX idx_exam_results_certificate_status ON public.exam_results(certificate_status);

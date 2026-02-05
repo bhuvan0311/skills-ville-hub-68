@@ -20,6 +20,8 @@ import SchedulePage from "@/pages/franchise/Schedule";
 import PaymentsPage from "@/pages/franchise/Payments";
 import TrainingPage from "@/pages/franchise/Training";
 import SettingsPage from "@/pages/franchise/Settings";
+import ReportsPage from "@/pages/franchise/Reports";
+import BatchExamPage from "@/pages/franchise/BatchExam";
 
 // Admin Pages
 import AdminDashboard from "@/pages/admin/Dashboard";
@@ -29,6 +31,7 @@ import AdminBroadcastsPage from "@/pages/admin/Broadcasts";
 import AdminAnalyticsPage from "@/pages/admin/Analytics";
 import AdminPaymentsPage from "@/pages/admin/Payments";
 import AdminSettingsPage from "@/pages/admin/Settings";
+import AdminCertificatesPage from "@/pages/admin/Certificates";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +59,8 @@ const App = () => (
                   <Route path="/franchise/schedule" element={<SchedulePage />} />
                   <Route path="/franchise/payments" element={<PaymentsPage />} />
                   <Route path="/franchise/training" element={<TrainingPage />} />
+                  <Route path="/franchise/reports" element={<ReportsPage />} />
+                  <Route path="/franchise/batches/:id/exam" element={<BatchExamPage />} />
                   <Route path="/franchise/settings" element={<SettingsPage />} />
                 </Route>
               </Route>
@@ -67,6 +72,7 @@ const App = () => (
                   <Route path="/admin/franchises" element={<AdminFranchisesPage />} />
                   <Route path="/admin/products" element={<AdminProductsPage />} />
                   <Route path="/admin/broadcasts" element={<AdminBroadcastsPage />} />
+                  <Route path="/admin/certificates" element={<AdminCertificatesPage />} />
                   <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
                   <Route path="/admin/payments" element={<AdminPaymentsPage />} />
                   <Route path="/admin/settings" element={<AdminSettingsPage />} />

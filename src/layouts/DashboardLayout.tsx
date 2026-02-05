@@ -33,6 +33,8 @@ import {
   ChevronRight,
   Bell,
   Megaphone,
+  Award,
+  FileText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import skillsVilleLogo from '@/assets/skills-ville-logo.svg';
@@ -44,6 +46,7 @@ const franchiseNavItems = [
   { to: '/franchise/schedule', icon: Calendar, label: 'Schedule' },
   { to: '/franchise/payments', icon: CreditCard, label: 'Payments', badge: 3 },
   { to: '/franchise/training', icon: BookOpen, label: 'Training' },
+  { to: '/franchise/reports', icon: FileText, label: 'Reports' },
   { to: '/franchise/settings', icon: Settings, label: 'Settings' },
 ];
 
@@ -52,6 +55,7 @@ const adminNavItems = [
   { to: '/admin/franchises', icon: Users, label: 'Franchises' },
   { to: '/admin/products', icon: Package, label: 'Product Catalog' },
   { to: '/admin/broadcasts', icon: Megaphone, label: 'Broadcasts' },
+  { to: '/admin/certificates', icon: Award, label: 'Certificates' },
   { to: '/admin/analytics', icon: BarChart3, label: 'Reports' },
   { to: '/admin/payments', icon: CreditCard, label: 'Payments' },
   { to: '/admin/settings', icon: Settings, label: 'Settings' },
