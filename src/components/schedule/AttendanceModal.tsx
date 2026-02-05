@@ -59,6 +59,16 @@ export function AttendanceModal({
     setAttendance((prev) => ({ ...prev, [studentId]: isPresent }));
 
     if (!isPresent) {
+      // Check if parent phone exists before opening WhatsApp
+      if (!student.parentPhone) {
+        toast({
+          title: 'Missing Phone Number',
+          description: `No parent phone number found for ${student.name}. Please update student details.`,
+          variant: 'destructive',
+        });
+        return;
+      }
+
       // Open WhatsApp chat with parent
       openWhatsAppChat(student.parentPhone, student.name);
 
@@ -118,7 +128,7 @@ export function AttendanceModal({
                   <div>
                     <p className="font-medium text-sm">{student.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      Parent: {student.parentPhone}
+                      Parent: {student.parentPhone || 'No phone number'}
                     </p>
                   </div>
                 </div>
