@@ -11,7 +11,22 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import { CheckCircle2, Save } from 'lucide-react';
+import { Save, MessageCircle } from 'lucide-react';
+
+/**
+ * Opens WhatsApp click-to-chat with a pre-filled absence message
+ */
+function openWhatsAppChat(phoneNumber: string, studentName: string) {
+  // Clean phone number - remove spaces, dashes, and ensure proper format
+  const cleanPhone = phoneNumber.replace(/[\s\-\(\)]/g, '').replace(/^\+/, '');
+  
+  const message = encodeURIComponent(
+    `Dear Parent, ${studentName} has been marked absent for today's Abacus class. Please contact the center if you have any questions. - Skills Ville Abacus`
+  );
+  
+  const whatsappUrl = `https://wa.me/${cleanPhone}?text=${message}`;
+  window.open(whatsappUrl, '_blank');
+}
 
 interface Student {
   id: string;
@@ -40,13 +55,16 @@ export function AttendanceModal({
     students.reduce((acc, student) => ({ ...acc, [student.id]: true }), {})
   );
 
-  const handleToggle = (studentId: string, studentName: string, isPresent: boolean) => {
+  const handleToggle = (studentId: string, student: Student, isPresent: boolean) => {
     setAttendance((prev) => ({ ...prev, [studentId]: isPresent }));
 
     if (!isPresent) {
+      // Open WhatsApp chat with parent
+      openWhatsAppChat(student.parentPhone, student.name);
+
       toast({
-        title: '✓ Automatic WhatsApp update sent to Parent',
-        description: `Absence notification sent for ${studentName}`,
+        title: '✓ WhatsApp Opened',
+        description: `Send absence notification to ${student.name}'s parent`,
         className: 'bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800',
       });
     }
@@ -115,7 +133,7 @@ export function AttendanceModal({
                   <Switch
                     checked={attendance[student.id]}
                     onCheckedChange={(checked) =>
-                      handleToggle(student.id, student.name, checked)
+                      handleToggle(student.id, student, checked)
                     }
                   />
                 </div>
