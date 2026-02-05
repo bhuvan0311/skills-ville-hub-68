@@ -95,13 +95,13 @@ export function DashboardLayout() {
         )}
       >
         {/* Logo */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border bg-card">
+        <div className="h-20 flex items-center justify-between px-4 border-b border-sidebar-border bg-card">
           <div className="flex items-center gap-3">
-            <img src={skillsVilleLogo} alt="Skills Ville" className="h-10 w-10 shrink-0" />
+            <img src={skillsVilleLogo} alt="Skills Ville" className="h-14 w-14 shrink-0" />
             {!sidebarCollapsed && (
               <div className="animate-fade-in">
-                <h1 className="text-sm font-bold text-foreground">Skills Ville</h1>
-                <p className="text-xs text-muted-foreground">Abacus Academy</p>
+                <h1 className="text-base font-bold text-foreground">Skills Ville</h1>
+                <p className="text-sm text-muted-foreground">Abacus Academy</p>
               </div>
             )}
           </div>
@@ -146,12 +146,12 @@ export function DashboardLayout() {
             onClick={() => setMobileMenuOpen(false)}
           />
           <aside className="absolute left-0 top-0 bottom-0 w-72 bg-sidebar border-r border-sidebar-border animate-slide-in-right">
-            <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border">
+            <div className="h-20 flex items-center justify-between px-4 border-b border-sidebar-border">
               <div className="flex items-center gap-3">
-                <img src={skillsVilleLogo} alt="Skills Ville" className="h-10 w-10" />
+                <img src={skillsVilleLogo} alt="Skills Ville" className="h-14 w-14" />
                 <div>
-                  <h1 className="text-sm font-bold">Skills Ville</h1>
-                  <p className="text-xs text-muted-foreground">Abacus Academy</p>
+                  <h1 className="text-base font-bold">Skills Ville</h1>
+                  <p className="text-sm text-muted-foreground">Abacus Academy</p>
                 </div>
               </div>
               <Button
