@@ -185,9 +185,12 @@ export function DashboardLayout() {
               <Menu className="h-5 w-5" />
             </Button>
             <div className="hidden sm:block">
-              <h2 className="text-lg font-semibold text-foreground">
-                {userRole === 'super_admin' ? 'Skills Ville Admin Portal' : 'Skills Ville Franchise Portal'}
-              </h2>
+              <div className="flex items-center gap-2">
+                <img src={skillsVilleLogo} alt="Skills Ville" className="h-8 w-8" />
+                <h2 className="text-lg font-semibold text-foreground">
+                  {userRole === 'super_admin' ? 'Skills Ville Admin Portal' : 'Skills Ville Franchise Portal'}
+                </h2>
+              </div>
             </div>
           </div>
 
