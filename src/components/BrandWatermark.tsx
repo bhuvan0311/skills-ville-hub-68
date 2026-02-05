@@ -10,7 +10,7 @@ export function BrandWatermark() {
       <img 
         src={watermarkLogo} 
         alt="" 
-        className="w-[60vw] max-w-[600px] h-auto opacity-[0.03] grayscale select-none"
+        className="w-[60vw] max-w-[600px] h-auto opacity-30 grayscale select-none"
         draggable={false}
       />
     </div>
