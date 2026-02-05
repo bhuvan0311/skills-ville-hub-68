@@ -2,44 +2,28 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Calendar } from 'lucide-react';
+import { Batch } from '@/lib/supabase';
 
 interface ClassSlot {
   id: string;
   batchName: string;
   level: string;
   time: string;
-  teacher: string;
 }
 
 interface WeeklyCalendarProps {
+  batches?: Batch[];
   onSlotClick?: (slot: ClassSlot) => void;
 }
 
 const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-const schedule: Record<string, ClassSlot[]> = {
-  Mon: [
-    { id: '1', batchName: 'Batch A', level: 'Level 1', time: '4:00 PM', teacher: 'Priya' },
-    { id: '2', batchName: 'Batch B', level: 'Level 3', time: '5:00 PM', teacher: 'Priya' },
-  ],
-  Tue: [
-    { id: '3', batchName: 'Batch C', level: 'Level 2', time: '3:00 PM', teacher: 'Anjali' },
-  ],
-  Wed: [
-    { id: '4', batchName: 'Batch A', level: 'Level 1', time: '4:00 PM', teacher: 'Priya' },
-    { id: '5', batchName: 'Batch D', level: 'Level 4', time: '5:00 PM', teacher: 'Rahul' },
-  ],
-  Thu: [
-    { id: '6', batchName: 'Batch B', level: 'Level 3', time: '4:00 PM', teacher: 'Priya' },
-  ],
-  Fri: [
-    { id: '7', batchName: 'Batch C', level: 'Level 2', time: '3:00 PM', teacher: 'Anjali' },
-    { id: '8', batchName: 'Batch A', level: 'Level 1', time: '4:00 PM', teacher: 'Priya' },
-  ],
-  Sat: [
-    { id: '9', batchName: 'Batch D', level: 'Level 4', time: '10:00 AM', teacher: 'Rahul' },
-    { id: '10', batchName: 'Batch B', level: 'Level 3', time: '11:00 AM', teacher: 'Priya' },
-  ],
+const dayMapping: Record<string, string> = {
+  'Monday': 'Mon',
+  'Tuesday': 'Tue',
+  'Wednesday': 'Wed',
+  'Thursday': 'Thu',
+  'Friday': 'Fri',
+  'Saturday': 'Sat',
 };
 
 const levelColors: Record<string, string> = {
@@ -47,9 +31,52 @@ const levelColors: Record<string, string> = {
   'Level 2': 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
   'Level 3': 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
   'Level 4': 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
+  'Level 5': 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300',
+  'Level 6': 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300',
+  'Level 7': 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
+  'Level 8': 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
 };
 
-export function WeeklyCalendar({ onSlotClick }: WeeklyCalendarProps) {
+function parseSchedule(batch: Batch): { days: string[]; time: string } {
+  // Parse schedule string like "Monday, Wednesday, Friday • 4:00 PM"
+  if (!batch.schedule) return { days: [], time: '' };
+  
+  const parts = batch.schedule.split('•').map(s => s.trim());
+  const daysPart = parts[0] || '';
+  const time = parts[1] || '';
+  
+  // Parse days (could be "Mon, Wed, Fri" or "Monday, Wednesday, Friday")
+  const days = daysPart.split(',').map(d => {
+    const trimmed = d.trim();
+    // Convert full day names to short form
+    return dayMapping[trimmed] || trimmed.slice(0, 3);
+  }).filter(d => weekDays.includes(d));
+  
+  return { days, time };
+}
+
+export function WeeklyCalendar({ batches = [], onSlotClick }: WeeklyCalendarProps) {
+  // Build schedule from batches
+  const schedule: Record<string, ClassSlot[]> = {};
+  
+  weekDays.forEach(day => {
+    schedule[day] = [];
+  });
+  
+  batches.forEach(batch => {
+    const { days, time } = parseSchedule(batch);
+    days.forEach(day => {
+      if (schedule[day]) {
+        schedule[day].push({
+          id: batch.id,
+          batchName: batch.name,
+          level: `Level ${batch.level}`,
+          time: time || 'TBD',
+        });
+      }
+    });
+  });
+
   return (
     <Card className="bg-white dark:bg-card">
       <CardHeader className="pb-4">
@@ -75,12 +102,11 @@ export function WeeklyCalendar({ onSlotClick }: WeeklyCalendarProps) {
                     <p className="font-medium text-xs truncate">{slot.batchName}</p>
                     <Badge
                       variant="secondary"
-                      className={`mt-1 text-[10px] px-1.5 py-0 ${levelColors[slot.level]}`}
+                      className={`mt-1 text-[10px] px-1.5 py-0 ${levelColors[slot.level] || 'bg-gray-100 text-gray-700'}`}
                     >
                       {slot.level}
                     </Badge>
                     <p className="text-[10px] text-muted-foreground mt-1">{slot.time}</p>
-                    <p className="text-[10px] text-muted-foreground">{slot.teacher}</p>
                   </div>
                 ))}
                 {(!schedule[day] || schedule[day].length === 0) && (
