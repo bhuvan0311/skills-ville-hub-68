@@ -566,3 +566,51 @@ export async function getTotalKitStock(franchiseId: string): Promise<number> {
 
   return (data || []).reduce((sum, inv) => sum + (inv.quantity || 0), 0);
 }
+
+// ============================================
+// Batch CRUD Functions
+// ============================================
+
+export async function createBatch(batchData: {
+  franchise_id: string;
+  name: string;
+  level: number;
+  schedule?: string;
+  max_students?: number;
+}): Promise<Batch | null> {
+  const { data, error } = await supabase
+    .from('batches')
+    .insert({
+      ...batchData,
+      max_students: batchData.max_students || 15,
+      is_active: true,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating batch:', error);
+    throw error;
+  }
+
+  return data as Batch;
+}
+
+export async function getStudentsForBatch(batchId: string): Promise<{ id: string; name: string; parentPhone: string }[]> {
+  const { data, error } = await supabase
+    .from('students')
+    .select('id, full_name, parent_phone')
+    .eq('batch_id', batchId)
+    .neq('status', 'DROPOUT');
+
+  if (error) {
+    console.error('Error fetching students for batch:', error);
+    return [];
+  }
+
+  return (data || []).map(s => ({
+    id: s.id,
+    name: s.full_name,
+    parentPhone: s.parent_phone || '',
+  }));
+}
