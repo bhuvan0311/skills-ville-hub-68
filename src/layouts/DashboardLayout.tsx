@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { SidebarNavItem } from '@/components/SidebarNavItem';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
+import { BrandWatermark } from '@/components/BrandWatermark';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -185,7 +186,7 @@ export function DashboardLayout() {
             </Button>
             <div className="hidden sm:block">
               <h2 className="text-lg font-semibold text-foreground">
-                {userRole === 'super_admin' ? 'Admin Portal' : 'Franchise Portal'}
+                {userRole === 'super_admin' ? 'Skills Ville Admin Portal' : 'Skills Ville Franchise Portal'}
               </h2>
             </div>
           </div>
@@ -251,8 +252,11 @@ export function DashboardLayout() {
           </div>
         </header>
 
+        {/* Brand Watermark */}
+        <BrandWatermark />
+
         {/* Page Content */}
-        <main className="flex-1 overflow-auto p-4 lg:p-6 bg-background">
+        <main className="flex-1 overflow-auto p-4 lg:p-6 bg-background relative z-10">
           <Outlet />
         </main>
       </div>
