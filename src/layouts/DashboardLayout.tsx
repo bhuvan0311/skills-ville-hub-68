@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import { supabase } from '@/lib/supabase';
 import { SidebarNavItem } from '@/components/SidebarNavItem';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { BrandWatermark } from '@/components/BrandWatermark';
@@ -35,20 +36,10 @@ import {
   Megaphone,
   Award,
   FileText,
+  GraduationCap,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import skillsVilleLogo from '@/assets/skills-ville-logo.svg';
-
-const franchiseNavItems = [
-  { to: '/franchise/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/franchise/students', icon: Users, label: 'Students' },
-  { to: '/franchise/inventory', icon: Package, label: 'Inventory' },
-  { to: '/franchise/schedule', icon: Calendar, label: 'Schedule' },
-  { to: '/franchise/payments', icon: CreditCard, label: 'Payments', badge: 3 },
-  { to: '/franchise/training', icon: BookOpen, label: 'Training' },
-  { to: '/franchise/reports', icon: FileText, label: 'Reports' },
-  { to: '/franchise/settings', icon: Settings, label: 'Settings' },
-];
 
 const adminNavItems = [
   { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -62,11 +53,44 @@ const adminNavItems = [
 ];
 
 export function DashboardLayout() {
-  const { userRole, userProfile, signOut } = useAuth();
+  const { userRole, userProfile, signOut, user } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [pendingPaymentsCount, setPendingPaymentsCount] = useState(0);
+
+  const franchiseId = userProfile?.franchise_id;
+
+  // Fetch pending payments count for sidebar badge
+  useEffect(() => {
+    if (!franchiseId || userRole !== 'franchise_owner') return;
+
+    const fetchPendingPayments = async () => {
+      const { count } = await supabase
+        .from('finance_ledger')
+        .select('*', { count: 'exact', head: true })
+        .eq('franchise_id', franchiseId)
+        .eq('status', 'PENDING');
+      
+      setPendingPaymentsCount(count || 0);
+    };
+
+    fetchPendingPayments();
+  }, [franchiseId, userRole]);
+
+  // Dynamic franchise nav items with real badge count
+  const franchiseNavItems = [
+    { to: '/franchise/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { to: '/franchise/students', icon: Users, label: 'Students' },
+    { to: '/franchise/inventory', icon: Package, label: 'Inventory' },
+    { to: '/franchise/schedule', icon: Calendar, label: 'Schedule' },
+    { to: '/franchise/payments', icon: CreditCard, label: 'Payments', badge: pendingPaymentsCount > 0 ? pendingPaymentsCount : undefined },
+    { to: '/franchise/teachers', icon: GraduationCap, label: 'Teachers' },
+    { to: '/franchise/training', icon: BookOpen, label: 'Training' },
+    { to: '/franchise/reports', icon: FileText, label: 'Reports' },
+    { to: '/franchise/settings', icon: Settings, label: 'Settings' },
+  ];
 
   const navItems = userRole === 'super_admin' ? adminNavItems : franchiseNavItems;
 

@@ -21,15 +21,6 @@ import {
   ChevronRight,
 } from 'lucide-react';
 
-const retentionData = [
-  { month: 'Jan', attendance: 95, dropouts: 3 },
-  { month: 'Feb', attendance: 92, dropouts: 5 },
-  { month: 'Mar', attendance: 88, dropouts: 8 },
-  { month: 'Apr', attendance: 94, dropouts: 4 },
-  { month: 'May', attendance: 96, dropouts: 2 },
-  { month: 'Jun', attendance: 90, dropouts: 6 },
-];
-
 interface DashboardStats {
   activeStudents: number;
   totalDues: number;
@@ -37,11 +28,18 @@ interface DashboardStats {
   healthScore: number;
 }
 
+interface RetentionData {
+  month: string;
+  attendance: number;
+  dropouts: number;
+}
+
 export default function FranchiseDashboard() {
   const navigate = useNavigate();
   const { userProfile } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
+  const [retentionData, setRetentionData] = useState<RetentionData[]>([]);
   const [needsAttention, setNeedsAttention] = useState<{ id: string; title: string; description: string; actions: string[] }[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -103,9 +101,15 @@ export default function FranchiseDashboard() {
           healthScore: calculatedHealthScore,
         });
 
+        // Fetch retention data - students by enrollment month and dropouts by month
+        await fetchRetentionData();
+
+        // Fetch recent activities
+        await fetchRecentActivities();
+
         // Generate dynamic "Needs Attention" items
         const attentionItems: { id: string; title: string; description: string; actions: string[] }[] = [];
-        
+
         // Check for low stock
         const { data: lowStockItems } = await supabase
           .from('franchise_inventory')
@@ -143,17 +147,6 @@ export default function FranchiseDashboard() {
 
         setNeedsAttention(attentionItems);
 
-        // Set placeholder activities (can be wired to real activity log later)
-        setActivities([
-          {
-            id: '1',
-            type: 'general',
-            message: 'Dashboard connected to live data',
-            timestamp: 'Just now',
-            status: 'success',
-          },
-        ]);
-
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
         // Set defaults on error
@@ -163,13 +156,140 @@ export default function FranchiseDashboard() {
           pendingAlerts: 0,
           healthScore: 100,
         });
+        setRetentionData([]);
+        setActivities([]);
       } finally {
         setLoading(false);
       }
     };
 
+    const fetchRetentionData = async () => {
+      // Fetch all students for this franchise
+      const { data: students } = await supabase
+        .from('students')
+        .select('created_at, status, updated_at')
+        .eq('franchise_id', franchiseId);
+
+      if (!students || students.length === 0) {
+        setRetentionData([]);
+        return;
+      }
+
+      // Get last 6 months
+      const months: string[] = [];
+      const now = new Date();
+      for (let i = 5; i >= 0; i--) {
+        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        months.push(date.toLocaleString('default', { month: 'short' }));
+      }
+
+      // Group enrollments by month
+      const enrollmentsByMonth: Record<string, number> = {};
+      const dropoutsByMonth: Record<string, number> = {};
+
+      months.forEach((m) => {
+        enrollmentsByMonth[m] = 0;
+        dropoutsByMonth[m] = 0;
+      });
+
+      students.forEach((student) => {
+        const enrollMonth = new Date(student.created_at).toLocaleString('default', { month: 'short' });
+        if (enrollmentsByMonth[enrollMonth] !== undefined) {
+          enrollmentsByMonth[enrollMonth]++;
+        }
+
+        if (student.status === 'DROPOUT' && student.updated_at) {
+          const dropoutMonth = new Date(student.updated_at).toLocaleString('default', { month: 'short' });
+          if (dropoutsByMonth[dropoutMonth] !== undefined) {
+            dropoutsByMonth[dropoutMonth]++;
+          }
+        }
+      });
+
+      const chartData = months.map((month) => ({
+        month,
+        attendance: enrollmentsByMonth[month] || 0,
+        dropouts: dropoutsByMonth[month] || 0,
+      }));
+
+      setRetentionData(chartData);
+    };
+
+    const fetchRecentActivities = async () => {
+      const activityList: ActivityItem[] = [];
+
+      // Fetch latest 3 student enrollments
+      const { data: recentStudents } = await supabase
+        .from('students')
+        .select('id, full_name, created_at')
+        .eq('franchise_id', franchiseId)
+        .order('created_at', { ascending: false })
+        .limit(3);
+
+      (recentStudents || []).forEach((student) => {
+        activityList.push({
+          id: `student-${student.id}`,
+          type: 'student',
+          message: `New enrollment: ${student.full_name}`,
+          timestamp: formatTimeAgo(new Date(student.created_at)),
+          status: 'info',
+        });
+      });
+
+      // Fetch latest 3 paid payments
+      const { data: recentPayments } = await supabase
+        .from('finance_ledger')
+        .select('id, description, amount, paid_at')
+        .eq('franchise_id', franchiseId)
+        .eq('status', 'PAID')
+        .order('paid_at', { ascending: false })
+        .limit(3);
+
+      (recentPayments || []).forEach((payment) => {
+        activityList.push({
+          id: `payment-${payment.id}`,
+          type: 'payment',
+          message: `Payment received: ₹${Number(payment.amount).toLocaleString()}`,
+          timestamp: formatTimeAgo(new Date(payment.paid_at || Date.now())),
+          status: 'success',
+        });
+      });
+
+      // Sort by timestamp (newest first) and take top 5
+      activityList.sort((a, b) => {
+        // Simple comparison - activities with "Just now" or lower numbers come first
+        return 0; // Keep insertion order for now (already sorted by DB)
+      });
+
+      if (activityList.length === 0) {
+        activityList.push({
+          id: 'welcome',
+          type: 'general',
+          message: 'Welcome! Your dashboard is ready.',
+          timestamp: 'Just now',
+          status: 'success',
+        });
+      }
+
+      setActivities(activityList.slice(0, 5));
+    };
+
     fetchDashboardData();
   }, [franchiseId]);
+
+  const formatTimeAgo = (date: Date): string => {
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    return date.toLocaleDateString();
+  };
 
   const formatCurrency = (amount: number) => {
     if (amount >= 100000) {

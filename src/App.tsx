@@ -22,6 +22,7 @@ import TrainingPage from "@/pages/franchise/Training";
 import SettingsPage from "@/pages/franchise/Settings";
 import ReportsPage from "@/pages/franchise/Reports";
 import BatchExamPage from "@/pages/franchise/BatchExam";
+import TeachersPage from "@/pages/franchise/Teachers";
 
 // Admin Pages
 import AdminDashboard from "@/pages/admin/Dashboard";
@@ -58,6 +59,7 @@ const App = () => (
                   <Route path="/franchise/inventory" element={<InventoryPage />} />
                   <Route path="/franchise/schedule" element={<SchedulePage />} />
                   <Route path="/franchise/payments" element={<PaymentsPage />} />
+                  <Route path="/franchise/teachers" element={<TeachersPage />} />
                   <Route path="/franchise/training" element={<TrainingPage />} />
                   <Route path="/franchise/reports" element={<ReportsPage />} />
                   <Route path="/franchise/batches/:id/exam" element={<BatchExamPage />} />
