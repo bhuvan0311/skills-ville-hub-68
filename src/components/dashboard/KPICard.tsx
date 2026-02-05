@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { LucideIcon, TrendingUp, TrendingDown } from 'lucide-react';
@@ -14,6 +15,7 @@ interface KPICardProps {
   };
   variant?: 'default' | 'warning' | 'danger' | 'success';
   className?: string;
+  navigateTo?: string;
 }
 
 export function KPICard({
@@ -24,7 +26,10 @@ export function KPICard({
   trend,
   variant = 'default',
   className,
+  navigateTo,
 }: KPICardProps) {
+  const navigate = useNavigate();
+
   const variantStyles = {
     default: 'bg-card',
     warning: 'bg-warning/10 border-warning/30',
@@ -47,7 +52,15 @@ export function KPICard({
   };
 
   return (
-    <Card className={cn('relative overflow-hidden transition-all hover:shadow-lg', variantStyles[variant], className)}>
+    <Card 
+      className={cn(
+        'relative overflow-hidden transition-all hover:shadow-lg', 
+        variantStyles[variant], 
+        navigateTo && 'cursor-pointer hover:scale-[1.02] transition-transform duration-200',
+        className
+      )}
+      onClick={navigateTo ? () => navigate(navigateTo) : undefined}
+    >
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">
           {title}

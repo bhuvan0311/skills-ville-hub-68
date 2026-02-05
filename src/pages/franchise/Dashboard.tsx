@@ -99,6 +99,7 @@ export default function FranchiseDashboard() {
           icon={Users}
           trend={{ value: 12, isPositive: true }}
           subtitle="vs last month"
+          navigateTo="/franchise/students"
         />
         <KPICard
           title="Dues Pending"
@@ -106,6 +107,7 @@ export default function FranchiseDashboard() {
           icon={IndianRupee}
           variant="danger"
           subtitle="3 invoices overdue"
+          navigateTo="/franchise/payments"
         />
         <HealthGauge value={78} title="Franchise Health Score" />
         <KPICard
