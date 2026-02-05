@@ -254,9 +254,14 @@ export function DashboardLayout() {
                       {getInitials(userProfile?.full_name)}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="hidden sm:block text-sm font-medium">
-                    {userProfile?.full_name || 'User'}
-                  </span>
+                  <div className="hidden sm:flex flex-col items-start">
+                    <span className="text-sm font-medium">
+                      {userProfile?.full_name || 'User'}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {user?.email}
+                    </span>
+                  </div>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
