@@ -287,6 +287,7 @@ export function StudentKYCModal({
                 value={formData.name}
                 onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
                 className={errors.name ? 'border-destructive' : ''}
+                required
               />
               {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
             </div>
@@ -299,6 +300,7 @@ export function StudentKYCModal({
                 value={formData.parentName}
                 onChange={(e) => setFormData((prev) => ({ ...prev, parentName: e.target.value }))}
                 className={errors.parentName ? 'border-destructive' : ''}
+                required
               />
               {errors.parentName && <p className="text-xs text-destructive">{errors.parentName}</p>}
             </div>
@@ -311,6 +313,7 @@ export function StudentKYCModal({
                 value={formData.dateOfBirth}
                 onChange={(e) => setFormData((prev) => ({ ...prev, dateOfBirth: e.target.value }))}
                 className={errors.dateOfBirth ? 'border-destructive' : ''}
+                required
               />
               {errors.dateOfBirth && <p className="text-xs text-destructive">{errors.dateOfBirth}</p>}
             </div>
@@ -327,6 +330,7 @@ export function StudentKYCModal({
                   value={formData.phone}
                   onChange={(e) => setFormData((prev) => ({ ...prev, phone: e.target.value }))}
                   className={`rounded-l-none ${errors.phone ? 'border-destructive' : ''}`}
+                  required
                 />
               </div>
               {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}

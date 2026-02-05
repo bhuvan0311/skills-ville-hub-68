@@ -95,10 +95,17 @@ export async function getUserRole(userId: string): Promise<UserRole | null> {
     .from('user_roles')
     .select('role')
     .eq('user_id', userId)
-    .single();
+    .maybeSingle();
 
-  if (error || !data) {
-    console.error('Error fetching user role:', error);
+  if (error) {
+    // Only log actual errors, not "no rows" which is expected for new users
+    if (error.code !== 'PGRST116') {
+      console.error('Error fetching user role:', error);
+    }
+    return null;
+  }
+
+  if (!data) {
     return null;
   }
 
@@ -110,10 +117,17 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
     .from('profiles')
     .select('*')
     .eq('id', userId)
-    .single();
+    .maybeSingle();
 
-  if (error || !data) {
-    console.error('Error fetching user profile:', error);
+  if (error) {
+    // Only log actual errors, not "no rows" which is expected for new users
+    if (error.code !== 'PGRST116') {
+      console.error('Error fetching user profile:', error);
+    }
+    return null;
+  }
+
+  if (!data) {
     return null;
   }
 

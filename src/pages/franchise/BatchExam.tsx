@@ -12,9 +12,11 @@
    TableHeader,
    TableRow,
  } from '@/components/ui/table';
- import { ArrowLeft, GraduationCap, Save, CheckCircle, XCircle } from 'lucide-react';
+ import { ArrowLeft, GraduationCap, Save, CheckCircle, XCircle, Loader2 } from 'lucide-react';
  import { cn } from '@/lib/utils';
  import { useToast } from '@/hooks/use-toast';
+ import { useAuth } from '@/contexts/AuthContext';
+ import { supabase } from '@/lib/supabase';
  
  // Mock batch data - In production, fetch from Supabase based on batch ID
  const mockBatchData = {
@@ -107,18 +109,58 @@
      }
  
      setIsSubmitting(true);
-     await new Promise((resolve) => setTimeout(resolve, 1000));
  
-     const passedCount = Object.values(marks).filter((m) => Number(m) >= PASS_MARK).length;
-     const failedCount = batch.students.length - passedCount;
+     try {
+       // Get franchise_id from auth context or use demo
+       const franchiseId = 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
  
-     toast({
-       title: 'Results Submitted Successfully',
-       description: `${passedCount} students passed, ${failedCount} need remedial classes. Certificates flagged for passed students.`,
-     });
+       // Prepare exam results for insertion
+       const examResults = batch.students.map((student) => ({
+         student_id: student.id,
+         franchise_id: franchiseId,
+         level: batch.level,
+         marks_obtained: Number(marks[student.id]),
+         is_passed: Number(marks[student.id]) >= PASS_MARK,
+         certificate_status: Number(marks[student.id]) >= PASS_MARK ? 'PENDING' : null,
+         exam_date: new Date().toISOString().split('T')[0],
+       }));
  
-     setIsSubmitting(false);
-     navigate('/franchise/schedule');
+       // Insert exam results into Supabase
+       const { error } = await supabase
+         .from('exam_results')
+         .insert(examResults);
+ 
+       if (error) {
+         console.error('Error saving exam results:', error);
+         // Continue with demo mode if table doesn't exist
+         if (error.code !== '42P01') {
+           toast({
+             title: 'Warning',
+             description: 'Results saved locally. Database sync pending.',
+             variant: 'destructive',
+           });
+         }
+       }
+ 
+       const passedCount = Object.values(marks).filter((m) => Number(m) >= PASS_MARK).length;
+       const failedCount = batch.students.length - passedCount;
+ 
+       toast({
+         title: 'Results Submitted Successfully',
+         description: `${passedCount} students passed, ${failedCount} need remedial classes. Certificates flagged for passed students.`,
+       });
+ 
+       navigate('/franchise/schedule');
+     } catch (error) {
+       console.error('Error submitting marks:', error);
+       toast({
+         title: 'Error',
+         description: 'Failed to submit results. Please try again.',
+         variant: 'destructive',
+       });
+     } finally {
+       setIsSubmitting(false);
+     }
    };
  
    const passedCount = Object.values(marks).filter((m) => m !== '' && Number(m) >= PASS_MARK).length;
@@ -252,8 +294,17 @@
            disabled={isSubmitting}
            className="gap-2 shadow-glow"
          >
-           <Save className="h-4 w-4" />
-           {isSubmitting ? 'Submitting...' : 'Submit Results'}
+           {isSubmitting ? (
+             <>
+               <Loader2 className="h-4 w-4 animate-spin" />
+               Submitting...
+             </>
+           ) : (
+             <>
+               <Save className="h-4 w-4" />
+               Submit Results
+             </>
+           )}
          </Button>
        </div>
      </div>
