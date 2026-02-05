@@ -111,7 +111,10 @@ export function DashboardLayout() {
 
   return (
     <div className="min-h-screen bg-background flex w-full">
-      {/* Sidebar - Desktop */}
+      {/* FIXED DESKTOP SIDEBAR 
+        - 'hidden': Hides it on mobile (prevents squishing)
+        - 'lg:flex': Shows it only on Large screens (PC/Laptop)
+      */}
       <aside
         className={cn(
           'hidden lg:flex flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300',
@@ -162,7 +165,7 @@ export function DashboardLayout() {
         </div>
       </aside>
 
-      {/* Mobile Sidebar */}
+      {/* MOBILE SIDEBAR (OVERLAY) */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div
@@ -199,11 +202,12 @@ export function DashboardLayout() {
         </div>
       )}
 
-      {/* Main Content */}
+      {/* MAIN CONTENT AREA */}
       <div className="flex-1 flex flex-col min-w-0 bg-background">
         {/* Header */}
         <header className="h-16 border-b border-border bg-card flex items-center justify-between px-4 lg:px-6 sticky top-0 z-40 shadow-soft">
           <div className="flex items-center gap-4">
+            {/* Mobile Menu Trigger */}
             <Button
               variant="ghost"
               size="icon"
