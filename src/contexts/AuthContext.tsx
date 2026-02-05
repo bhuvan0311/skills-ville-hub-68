@@ -62,6 +62,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         getUserRole(userId),
         getUserProfile(userId),
       ]);
+      console.log('Fetched role from DB:', role);
+      console.log('Fetched profile from DB:', profile);
       // Default to franchise_owner if no role found (tables may not exist yet)
       setUserRole(role || 'franchise_owner');
       setUserProfile(profile);
