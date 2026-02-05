@@ -448,7 +448,7 @@ export default function FranchiseDashboard() {
       {/* Quick Actions - Clean Grid */}
       <div>
         <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:justify-end sm:ml-auto sm:max-w-lg lg:max-w-xl">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
             { label: 'Add Student', icon: Users, color: 'text-primary' },
             { label: 'Schedule Class', icon: Calendar, color: 'text-success' },
