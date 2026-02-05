@@ -145,6 +145,28 @@ export default function FranchiseDashboard() {
           });
         }
 
+        // Check for batches that have completed 12+ weeks and need exam scheduling
+        const twelveWeeksAgo = new Date();
+        twelveWeeksAgo.setDate(twelveWeeksAgo.getDate() - 84); // 12 weeks = 84 days
+        
+        const { data: matureBatches } = await supabase
+          .from('batches')
+          .select('id, name, created_at')
+          .eq('franchise_id', franchiseId)
+          .eq('is_active', true)
+          .lt('created_at', twelveWeeksAgo.toISOString());
+
+        if (matureBatches && matureBatches.length > 0) {
+          matureBatches.forEach((batch) => {
+            attentionItems.push({
+              id: `batch-${batch.id}`,
+              title: `${batch.name} completed 12 weeks`,
+              description: 'Consider scheduling level exam for this batch',
+              actions: ['Schedule Exam', 'Dismiss'],
+            });
+          });
+        }
+
         setNeedsAttention(attentionItems);
 
       } catch (error) {
@@ -319,6 +341,12 @@ export default function FranchiseDashboard() {
         break;
       case 'View Payments':
         navigate('/franchise/payments');
+        break;
+      case 'Schedule Exam':
+        navigate('/franchise/schedule');
+        break;
+      case 'Dismiss':
+        // Just close/ignore - in production this could mark as dismissed in DB
         break;
     }
   };
