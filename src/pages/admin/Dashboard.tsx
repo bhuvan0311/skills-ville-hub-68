@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { KPICard } from '@/components/dashboard/KPICard';
 import { ActivityFeed, ActivityItem } from '@/components/dashboard/ActivityFeed';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -64,6 +65,7 @@ const mockActivities: ActivityItem[] = [
 ];
 
 export default function AdminDashboard() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState<AdminDashboardStats | null>(null);
   const [franchisesByCity, setFranchisesByCity] = useState<CityData[]>([]);
   const [topFranchises, setTopFranchises] = useState<FranchiseWithStats[]>([]);
@@ -128,6 +130,8 @@ export default function AdminDashboard() {
           icon={Building2}
           trend={{ value: 8, isPositive: true }}
           subtitle={`${stats?.activeFranchises || 0} active`}
+          navigateTo="/admin/franchises"
+          className="cursor-pointer hover:scale-[1.02] transition-transform duration-200"
         />
         <KPICard
           title="Total Students"
@@ -135,6 +139,8 @@ export default function AdminDashboard() {
           icon={Users}
           trend={{ value: 15, isPositive: true }}
           subtitle="across all centers"
+          navigateTo="/admin/franchises"
+          className="cursor-pointer hover:scale-[1.02] transition-transform duration-200"
         />
         <KPICard
           title="Network Revenue"
@@ -143,6 +149,8 @@ export default function AdminDashboard() {
           trend={{ value: 22, isPositive: true }}
           subtitle="total collected"
           variant="success"
+          navigateTo="/admin/payments"
+          className="cursor-pointer hover:scale-[1.02] transition-transform duration-200"
         />
         <KPICard
           title="Active Cities"
