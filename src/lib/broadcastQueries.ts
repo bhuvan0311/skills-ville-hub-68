@@ -1,10 +1,10 @@
-import { supabase } from './supabase';
+import { supabase } from "./supabase";
 
 // ============================================
 // Broadcasts System
 // ============================================
 
-export type BroadcastPriority = 'NORMAL' | 'URGENT' | 'CRITICAL';
+export type BroadcastPriority = "NORMAL" | "URGENT" | "CRITICAL";
 
 export interface Broadcast {
   id: string;
@@ -22,17 +22,19 @@ export interface Broadcast {
 
 export async function getBroadcasts(limit = 10): Promise<Broadcast[]> {
   const { data, error } = await supabase
-    .from('broadcasts')
-    .select(`
+    .from("broadcasts")
+    .select(
+      `
       *,
       creator:profiles!created_by(full_name)
-    `)
-    .order('created_at', { ascending: false })
+    `,
+    )
+    .order("created_at", { ascending: false })
     .limit(limit);
 
   if (error) {
-    console.error('Error fetching broadcasts:', error);
-    return [];
+    console.error("Error fetching broadcasts:", error);
+    throw error;
   }
 
   return data as Broadcast[];
@@ -43,14 +45,14 @@ export async function getRecentBroadcasts(days = 7): Promise<Broadcast[]> {
   since.setDate(since.getDate() - days);
 
   const { data, error } = await supabase
-    .from('broadcasts')
-    .select('*')
-    .gte('created_at', since.toISOString())
-    .order('created_at', { ascending: false });
+    .from("broadcasts")
+    .select("*")
+    .gte("created_at", since.toISOString())
+    .order("created_at", { ascending: false });
 
   if (error) {
-    console.error('Error fetching recent broadcasts:', error);
-    return [];
+    console.error("Error fetching recent broadcasts:", error);
+    throw error;
   }
 
   return data as Broadcast[];
@@ -63,16 +65,16 @@ export async function createBroadcast(broadcastData: {
   created_by: string;
 }): Promise<Broadcast | null> {
   const { data, error } = await supabase
-    .from('broadcasts')
+    .from("broadcasts")
     .insert({
       ...broadcastData,
-      target_audience: 'ALL_FRANCHISES',
+      target_audience: "ALL_FRANCHISES",
     })
     .select()
     .single();
 
   if (error) {
-    console.error('Error creating broadcast:', error);
+    console.error("Error creating broadcast:", error);
     throw error;
   }
 
@@ -80,19 +82,21 @@ export async function createBroadcast(broadcastData: {
 }
 
 // Real-time subscription helper
-export function subscribeToBroadcasts(callback: (broadcast: Broadcast) => void) {
+export function subscribeToBroadcasts(
+  callback: (broadcast: Broadcast) => void,
+) {
   const channel = supabase
-    .channel('broadcasts-channel')
+    .channel("broadcasts-channel")
     .on(
-      'postgres_changes',
+      "postgres_changes",
       {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'broadcasts',
+        event: "INSERT",
+        schema: "public",
+        table: "broadcasts",
       },
       (payload) => {
         callback(payload.new as Broadcast);
-      }
+      },
     )
     .subscribe();
 

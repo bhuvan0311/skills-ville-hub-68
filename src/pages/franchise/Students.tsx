@@ -80,6 +80,7 @@ export default function StudentsPage() {
 
   const fetchData = async () => {
     setIsLoading(true);
+    setLoadError("");
     try {
       const [studentsData, batchesData] = await Promise.all([
         getStudents(franchiseId),

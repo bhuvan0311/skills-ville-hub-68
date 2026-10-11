@@ -11,6 +11,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:db": "node scripts/test-db.mjs",
+    "test:db:fresh": "node scripts/test-db.mjs --fresh",
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
     "preview:design": "vite --config vite.qa.config.ts --host 127.0.0.1 --port 4174 --strictPort",
     "test:watch": "vitest"

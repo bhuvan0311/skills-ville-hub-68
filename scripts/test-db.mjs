@@ -36,7 +36,8 @@ const scalar = async (sql, params = []) =>
   Object.values((await query(sql, params)).rows[0])[0];
 
 try {
-  await db.exec(`create role authenticated; create role service_role;
+  await db.exec(`create role authenticated; create role service_role; create role anon;
+    alter default privileges in schema public grant execute on functions to anon,authenticated;
     create schema auth; create table auth.users(id uuid primary key, raw_user_meta_data jsonb default '{}');
     create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
     grant usage on schema auth to authenticated; grant execute on function auth.uid() to authenticated;`);
@@ -45,9 +46,17 @@ try {
     "utf8",
   );
   await db.exec(
-    original
-      .slice(0, original.indexOf("-- Storage Bucket for Student Photos"))
-      .replace(/-- =+\s*$/, ""),
+    process.argv.includes("--fresh")
+      ? await readFile(
+          new URL(
+            "../supabase/migrations/202610110000_fresh_core.sql",
+            import.meta.url,
+          ),
+          "utf8",
+        )
+      : original
+          .slice(0, original.indexOf("-- Storage Bucket for Student Photos"))
+          .replace(/-- =+\s*$/, ""),
   );
   await db.exec(
     "grant usage on schema public to authenticated; grant select,insert,update,delete on all tables in schema public to authenticated;",
@@ -64,6 +73,24 @@ try {
       "utf8",
     ),
   );
+  // Storage API is not emulated; these tables exercise PostgreSQL policies only.
+  await db.exec(`create schema storage;
+    create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
+    create table storage.objects(id uuid primary key default gen_random_uuid(),bucket_id text references storage.buckets,name text);
+    alter table storage.objects enable row level security;
+    grant usage on schema storage to authenticated,anon;
+    grant select,insert,update,delete on storage.objects to authenticated,anon;`);
+  for (const file of [
+    "202610110003_private_photos.sql",
+    "202610110004_catalogue_announcements.sql",
+    "202610110005_function_access.sql",
+  ])
+    await db.exec(
+      await readFile(
+        new URL(`../supabase/migrations/${file}`, import.meta.url),
+        "utf8",
+      ),
+    );
   await db.exec(`insert into auth.users(id) values ${["admin", "owner", "other", "teacher", "parent", "reception"].map((k) => `('${ids[k]}')`).join(",")};
     insert into public.franchises(id,franchise_code,name,city) values ('${ids.a}','A','Test A','Test'),('${ids.b}','B','Test B','Test');
     update public.profiles set franchise_id='${ids.a}' where id='${ids.owner}';
@@ -420,9 +447,97 @@ try {
       [ids.a, ids.owner, ids.student],
     );
   });
+  await test("Photos remain private and cannot cross franchises or be changed by parents", async () => {
+    const path = `${ids.a}/${ids.student}.jpg`;
+    await as(ids.owner);
+    await query(
+      "insert into storage.objects(bucket_id,name) values ('student-photos',$1)",
+      [path],
+    );
+    assert.equal(await scalar("select count(*)::int from storage.objects"), 1);
+    await denied(
+      "insert into storage.objects(bucket_id,name) values ('student-photos',$1)",
+      [`${ids.b}/${ids.otherStudent}.jpg`],
+    );
+    await as(ids.other);
+    assert.equal(await scalar("select count(*)::int from storage.objects"), 0);
+    await as(ids.parent);
+    assert.equal(await scalar("select count(*)::int from storage.objects"), 1);
+    await denied(
+      "insert into storage.objects(bucket_id,name) values ('student-photos',$1)",
+      [path],
+    );
+    assert.equal(
+      (
+        await query(
+          "update storage.objects set name='malformed.jpg' returning id",
+        )
+      ).rows.length,
+      0,
+    );
+    await db.exec("reset role; set role anon");
+    assert.equal(await scalar("select count(*)::int from storage.objects"), 0);
+    await db.exec("reset role");
+    assert.equal(
+      await scalar(
+        "select public from storage.buckets where id='student-photos'",
+      ),
+      false,
+    );
+  });
+  await test("Only Head Office manages the retained catalogue and authentic announcement authors", async () => {
+    await as(ids.admin);
+    await query(
+      "insert into public.products(name,price,category) values ('Test product',100,'kit')",
+    );
+    await query(
+      "insert into public.broadcasts(title,message,created_by) values ('Test','Test',$1)",
+      [ids.admin],
+    );
+    await denied(
+      "insert into public.broadcasts(title,message,created_by) values ('Fake','Fake',$1)",
+      [ids.owner],
+    );
+    await as(ids.owner);
+    assert.equal(await scalar("select count(*)::int from public.products"), 1);
+    await denied(
+      "insert into public.products(name,price,category) values ('Forbidden',1,'kit')",
+    );
+    await denied(
+      "insert into public.broadcasts(title,message,created_by) values ('Forbidden','Forbidden',$1)",
+      [ids.owner],
+    );
+    await db.exec("reset role; set role anon");
+    await denied("select * from public.products");
+    await denied("select * from public.broadcasts");
+  });
+  await test("Anonymous RPCs and cross-account legacy helper lookups are blocked", async () => {
+    await db.exec("reset role; set role anon");
+    await denied("select public.erp_progress_student($1)", [ids.student]);
+    assert.equal(
+      await scalar(
+        "select has_function_privilege('anon','public.erp_verify_payment(uuid,boolean)','execute')",
+      ),
+      false,
+    );
+    await as(ids.owner);
+    assert.equal(
+      await scalar("select public.get_user_franchise_id($1)", [ids.other]),
+      null,
+    );
+    assert.equal(
+      await scalar("select public.has_role($1,'super_admin')", [ids.admin]),
+      false,
+    );
+  });
   process.stdout.write(
     `\n${passed} database integration checks passed. Test records are in an ephemeral database only.\n`,
   );
+  await db.exec("reset role");
+  await db.exec(
+    await readFile(new URL("./staging-sql-check.sql", import.meta.url), "utf8"),
+  );
+  process.stdout.write("Staging rollback SQL script also passed locally.\n");
 } catch (error) {
   process.stderr.write(
     `${error.message}\n${error.detail || ""}\n${error.where || ""}\n${error.internalQuery || ""}\nPosition: ${error.position || error.internalPosition || "unknown"}\n`,

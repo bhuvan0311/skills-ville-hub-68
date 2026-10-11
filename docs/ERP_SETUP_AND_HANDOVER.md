@@ -1,5 +1,9 @@
 # Skills Ville ERP: setup and handover
 
+## Current release evidence
+
+See [release status](ERP_RELEASE_STATUS.md) for the new Supabase setup, live rollback checks, account provisioning and hosting destination. These observations apply only to the newly created staging project. The original inactive projects were not modified.
+
 ## Accepted decisions, 11 October 2026
 
 The founder approved packages A+B+C+D from the ERP proposal: the internal ERP, abacus learning operations, franchise commercial operations and parent services.
@@ -34,10 +38,10 @@ The new ERP stock ledger starts with explicit stock opening movements. **It does
 
 ## Configure and validate a test environment
 
-1. Use the intended Supabase staging project. Inventory its existing tables, grants, policies, triggers and extensions first. The live schema has not been accessed in this task.
-2. The original `docs/supabase-schema.sql` is historical setup documentation, not an incremental migration. Do not rerun it against an existing database. For a fresh environment, create the existing core tables from a reviewed baseline; its public student-photo bucket policy also needs a separate privacy review before use with real children’s photos.
-3. Apply `supabase/migrations/202610110001_erp.sql` and then `202610110002_exams.sql` once, using the project migration process. They require the existing core tables. They add new ERP tables and replace the specifically identified legacy policies that treated profile franchise assignment as owner authorisation.
-4. Create `.env.local` from `.env.example`, using the approved project URL and its public/publishable client key. Service-role keys must never be put in a `VITE_` variable, browser code, committed files or chat. The app explicitly shows configuration required when the client connection is missing.
+1. Use the intended Supabase staging project. Inventory its existing tables, grants, policies, triggers and extensions first. The newly created staging schema was empty and has now been migrated; do not assume the same for an older database.
+2. The original `docs/supabase-schema.sql` is historical setup documentation, not an incremental migration. Do not rerun it against an existing database. For a new empty project, apply 202610110000_fresh_core.sql instead; it rejects an existing core schema and never seeds historical sample records.
+3. Apply `supabase/migrations/202610110001_erp.sql` and then `202610110002_exams.sql` once, using the project migration process. Follow with 202610110003_private_photos.sql, 202610110004_catalogue_announcements.sql and 202610110005_function_access.sql. They require the core tables, add ERP permissions, make student photos private and explicitly revoke anonymous function grants. On an existing deployment review its catalogue, storage policies and grants first.
+4. Create `.env.local` from `.env.example`, using the approved project URL and VITE_SUPABASE_PUBLISHABLE_KEY. VITE_SUPABASE_ANON_KEY is a legacy fallback only. Service-role keys must never be put in a `VITE_` variable, browser code, committed files or chat. The app explicitly shows configuration required when the client connection is missing.
 5. Create real accounts through Supabase Auth's secure administrative process. Add an initial `super_admin` record in `user_roles` through a trusted database administrator. Create a centre in the existing Head Office directory; use ERP → People & permissions to assign the existing account UUID and role. No browser-side account signup changes the administrator's session.
 6. Head Office configures fee plans, royalty rules, UPI/bank details, templates, stock catalogue and franchise dates per centre. Owners assign staff/parent accounts, link children, assign fee plans and record actual opening stock. No sample values from the design preview should be imported.
 7. Test with at least two real staging franchises, each role, and an inactive account. Verify actual Auth session handling, RLS, persistence, account disablement, duplicate/conflicting requests and exports. Check existing policies not present in the repository, which could broaden access through PostgreSQL's permissive-policy rules.
@@ -50,6 +54,7 @@ npm ci --ignore-scripts --no-audit --no-fund
 npm run typecheck
 npm test
 npm run test:db
+npm run test:db:fresh
 npm run build
 ```
 
@@ -61,7 +66,7 @@ Desktop/mobile review images are in `docs/screenshots`. They show labelled desig
 
 ## Remaining release requirements and limits
 
-This is an implemented, locally tested ERP change. **No live database migration, production deployment, payment collection or WhatsApp message delivery has occurred.** A staging connection and authorised account provisioning are needed to verify and release it against real services.
+This is an implemented, locally tested ERP change. **The new staging database has been migrated and checked. No real payment collection or WhatsApp message delivery has occurred. Hosting and remaining release evidence are tracked in ERP_RELEASE_STATUS.md.** The staging connection and initial Head Office provisioning are complete. User browser sign-in and final rollout checks remain.
 
 GitHub Actions was inspected after pushing the review branch. The jobs did not start: GitHub's check annotation reports, “The job was not started because your account is locked due to a billing issue.” Local checks pass; hosted CI must be rerun once the repository account issue is resolved. No billing settings were changed by this task.
 

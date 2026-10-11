@@ -1,7 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
+import { studentPhotoPath } from "./studentPhotos";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseAnonKey =
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+  import.meta.env.VITE_SUPABASE_ANON_KEY;
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
 export const supabase = createClient(
@@ -267,7 +270,28 @@ export async function getStudents(franchiseId: string): Promise<Student[]> {
     throw error;
   }
 
-  return data as Student[];
+  const students = data as Student[];
+  const paths = [
+    ...new Set(
+      students
+        .map((s) => studentPhotoPath(s.photo_url, supabaseUrl))
+        .filter((p): p is string => Boolean(p)),
+    ),
+  ];
+  if (!paths.length)
+    return students.map((s) => ({ ...s, photo_url: undefined }));
+  const { data: signed, error: photoError } = await supabase.storage
+    .from("student-photos")
+    .createSignedUrls(paths, 600);
+  if (photoError) throw photoError;
+  const urls = new Map(
+    (signed || []).filter((s) => !s.error).map((s) => [s.path, s.signedUrl]),
+  );
+  return students.map((s) => ({
+    ...s,
+    photo_url:
+      urls.get(studentPhotoPath(s.photo_url, supabaseUrl) || "") || undefined,
+  }));
 }
 
 export async function createStudent(studentData: {
@@ -359,11 +383,7 @@ export async function uploadStudentPhoto(
     throw uploadError;
   }
 
-  const { data: urlData } = supabase.storage
-    .from("student-photos")
-    .getPublicUrl(fileName);
-
-  return urlData.publicUrl;
+  return fileName;
 }
 
 export async function deleteStudentPhoto(
@@ -375,7 +395,10 @@ export async function deleteStudentPhoto(
 
   for (const ext of extensions) {
     const fileName = `${franchiseId}/${studentId}.${ext}`;
-    await supabase.storage.from("student-photos").remove([fileName]);
+    const { error } = await supabase.storage
+      .from("student-photos")
+      .remove([fileName]);
+    if (error) throw error;
   }
 
   return true;

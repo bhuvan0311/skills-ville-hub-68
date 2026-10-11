@@ -6,7 +6,7 @@ Head Office configures fees, royalty terms and payment details. Student progress
 
 ## Setup
 
-See [ERP setup and handover](docs/ERP_SETUP_AND_HANDOVER.md) for migrations, account provisioning, existing-data reconciliation, release gates and known limits. The actual live schema and production deployment are not verified by this repository change.
+See [ERP setup and handover](docs/ERP_SETUP_AND_HANDOVER.md) for migrations, account provisioning, existing-data reconciliation, release gates and known limits. See docs/ERP_RELEASE_STATUS.md for the new staging database and hosting release evidence.
 
 Create an ignored .env.local from .env.example with the approved Supabase project URL and public client key. Never use a service-role key in browser variables.
 
@@ -18,6 +18,7 @@ Create an ignored .env.local from .env.example with the approved Supabase projec
     npm run typecheck
     npm test
     npm run test:db
+    npm run test:db:fresh
     npm run build
 
 The database tests use an ephemeral PostgreSQL database; they never touch live records. GitHub Actions runs these checks when its account/runner access is available.
