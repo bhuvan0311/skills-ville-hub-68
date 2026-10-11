@@ -66,7 +66,7 @@ Desktop/mobile review images are in `docs/screenshots`. They show labelled desig
 
 ## Remaining release requirements and limits
 
-This is an implemented, locally tested ERP change. **The new staging database has been migrated and checked. No real payment collection or WhatsApp message delivery has occurred. Hosting and remaining release evidence are tracked in ERP_RELEASE_STATUS.md.** The staging connection and initial Head Office provisioning are complete. User browser sign-in and final rollout checks remain.
+This is an implemented, locally tested ERP change. **The new staging database has been migrated and checked, and the connected frontend is deployed. No real payment collection or WhatsApp message delivery has occurred. Hosting and remaining release evidence are tracked in ERP_RELEASE_STATUS.md.** The owner reported successful Head Office sign-in. The login page is public with explicit user approval; role-specific workflow checks and custom-domain DNS verification remain.
 
 GitHub Actions was inspected after pushing the review branch. The jobs did not start: GitHub's check annotation reports, “The job was not started because your account is locked due to a billing issue.” Local checks pass; hosted CI must be rerun once the repository account issue is resolved. No billing settings were changed by this task.
 
