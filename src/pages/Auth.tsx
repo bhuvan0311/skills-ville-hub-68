@@ -1,18 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { useTheme } from '@/contexts/ThemeContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
-import { Moon, Sun, Eye, EyeOff, Loader2, Shield } from 'lucide-react';
-import skillsVilleLogo from '@/assets/skills-ville-logo.svg';
-import { z } from 'zod';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { isSupabaseConfigured } from "@/lib/supabase";
+import { useTheme } from "@/contexts/ThemeContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { Moon, Sun, Eye, EyeOff, Loader2, Shield } from "lucide-react";
+import skillsVilleLogo from "@/assets/skills-ville-logo.svg";
+import { z } from "zod";
 
-const emailSchema = z.string().email('Please enter a valid email address');
-const passwordSchema = z.string().min(6, 'Password must be at least 6 characters');
+const emailSchema = z.string().email("Please enter a valid email address");
+const passwordSchema = z
+  .string()
+  .min(6, "Password must be at least 6 characters");
 
 export default function AuthPage() {
   const navigate = useNavigate();
@@ -20,26 +30,24 @@ export default function AuthPage() {
   const { theme, toggleTheme } = useTheme();
   const { toast } = useToast();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>(
+    {},
+  );
 
   // Redirect authenticated users based on role
   useEffect(() => {
     if (user && userRole && !isLoading) {
-      if (userRole === 'super_admin') {
-        navigate('/admin/dashboard');
-      } else if (userRole === 'franchise_owner') {
-        navigate('/franchise/dashboard');
-      }
+      navigate(userRole === "parent" ? "/erp/parent" : "/erp/overview");
     }
   }, [user, userRole, isLoading, navigate]);
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {};
-    
+
     try {
       emailSchema.parse(email);
     } catch (e) {
@@ -65,16 +73,18 @@ export default function AuthPage() {
     if (!validateForm()) return;
 
     setIsSubmitting(true);
-    const { error } = await signIn(email, password);
-    setIsSubmitting(false);
-
-    if (error) {
+    try {
+      const { error } = await signIn(email, password);
+      if (error) throw error;
+    } catch {
       // Show access denied message for all login errors
       toast({
-        variant: 'destructive',
-        title: 'Access Denied',
-        description: 'Contact Head Office for account access.',
+        variant: "destructive",
+        title: "Access Denied",
+        description: "Contact Head Office for account access.",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -106,7 +116,7 @@ export default function AuthPage() {
           onClick={toggleTheme}
           className="rounded-full"
         >
-          {theme === 'dark' ? (
+          {theme === "dark" ? (
             <Sun className="h-5 w-5" />
           ) : (
             <Moon className="h-5 w-5" />
@@ -117,12 +127,40 @@ export default function AuthPage() {
       {/* Main Content */}
       <main className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-md animate-fade-in">
+          {!isSupabaseConfigured && (
+            <div
+              role="alert"
+              className="mb-4 rounded-lg border border-warning/30 bg-warning/10 p-4 text-sm"
+            >
+              Database connection is not configured. Head Office must connect
+              the approved Supabase project before sign-in is available.
+            </div>
+          )}
+          {user && !userRole && (
+            <div role="alert" className="mb-4 rounded-lg border p-4 text-sm">
+              Account permissions could not be verified. Contact Head Office or
+              sign out and try again.
+              <Button
+                className="mt-3 w-full"
+                variant="outline"
+                onClick={() =>
+                  import("@/lib/supabase").then(({ supabase }) =>
+                    supabase.auth.signOut(),
+                  )
+                }
+              >
+                Sign out
+              </Button>
+            </div>
+          )}
           <Card className="shadow-soft-lg border bg-card">
             <CardHeader className="text-center pb-2">
               <div className="mx-auto mb-4 p-3 rounded-full bg-primary/10 w-fit">
                 <Shield className="h-8 w-8 text-primary" />
               </div>
-              <CardTitle className="text-2xl font-bold">Franchise Portal</CardTitle>
+              <CardTitle className="text-2xl font-bold">
+                Franchise Portal
+              </CardTitle>
               <CardDescription>
                 Sign in to access your dashboard
               </CardDescription>
@@ -137,7 +175,7 @@ export default function AuthPage() {
                     placeholder="Enter your email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className={errors.email ? 'border-destructive' : ''}
+                    className={errors.email ? "border-destructive" : ""}
                   />
                   {errors.email && (
                     <p className="text-xs text-destructive">{errors.email}</p>
@@ -149,11 +187,13 @@ export default function AuthPage() {
                   <div className="relative">
                     <Input
                       id="login-password"
-                      type={showPassword ? 'text' : 'password'}
+                      type={showPassword ? "text" : "password"}
                       placeholder="Enter your password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className={errors.password ? 'border-destructive pr-10' : 'pr-10'}
+                      className={
+                        errors.password ? "border-destructive pr-10" : "pr-10"
+                      }
                     />
                     <Button
                       type="button"
@@ -170,14 +210,16 @@ export default function AuthPage() {
                     </Button>
                   </div>
                   {errors.password && (
-                    <p className="text-xs text-destructive">{errors.password}</p>
+                    <p className="text-xs text-destructive">
+                      {errors.password}
+                    </p>
                   )}
                 </div>
 
                 <Button
                   type="submit"
                   className="w-full shadow-glow"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !isSupabaseConfigured}
                 >
                   {isSubmitting ? (
                     <>
@@ -185,7 +227,7 @@ export default function AuthPage() {
                       Signing in...
                     </>
                   ) : (
-                    'Login'
+                    "Login"
                   )}
                 </Button>
               </form>
@@ -193,7 +235,8 @@ export default function AuthPage() {
             <CardFooter className="flex flex-col gap-4 text-center text-sm text-muted-foreground">
               <div className="p-3 bg-muted/50 rounded-lg w-full">
                 <p className="text-xs">
-                  This is a private portal. Accounts are created by Head Office only.
+                  This is a private portal. Accounts are created by Head Office
+                  only.
                 </p>
               </div>
             </CardFooter>

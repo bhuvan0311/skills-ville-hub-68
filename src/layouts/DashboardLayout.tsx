@@ -37,11 +37,13 @@ import {
   Award,
   FileText,
   GraduationCap,
+  Building2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import skillsVilleLogo from '@/assets/skills-ville-logo.svg';
 
 const adminNavItems = [
+  { to: '/erp/overview', icon: Building2, label: 'ERP Workspace' },
   { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/admin/franchises', icon: Users, label: 'Franchises' },
   { to: '/admin/products', icon: Package, label: 'Product Catalog' },
@@ -81,6 +83,7 @@ export function DashboardLayout() {
 
   // Dynamic franchise nav items with real badge count
   const franchiseNavItems = [
+    { to: '/erp/overview', icon: Building2, label: 'ERP Workspace' },
     { to: '/franchise/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/franchise/students', icon: Users, label: 'Students' },
     { to: '/franchise/inventory', icon: Package, label: 'Inventory' },

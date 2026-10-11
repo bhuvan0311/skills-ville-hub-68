@@ -1,17 +1,23 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = 'https://ogblnmyxdizmlfxvporo.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9nYmxubXl4ZGl6bWxmeHZwb3JvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyMDM5NzksImV4cCI6MjA4NTc3OTk3OX0.vpGAbuELXyd3zRVzSh3IWGJJ_KjivcSTsvmj53l9OjQ';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    storage: localStorage,
-    persistSession: true,
-    autoRefreshToken: true,
+export const supabase = createClient(
+  supabaseUrl || "http://127.0.0.1:54321",
+  supabaseAnonKey || "not-configured",
+  {
+    auth: {
+      storage: localStorage,
+      persistSession: true,
+      autoRefreshToken: true,
+    },
   },
-});
+);
 
-export type UserRole = 'super_admin' | 'franchise_owner';
+export type UserRole =
+  "super_admin" | "franchise_owner" | "teacher" | "receptionist" | "parent";
 
 export interface UserProfile {
   id: string;
@@ -44,16 +50,18 @@ export interface FinanceLedgerEntry {
   id: string;
   franchise_id: string;
   invoice_id: string;
-  type: 'FRANCHISE_FEE' | 'KIT_PURCHASE';
+  type: "FRANCHISE_FEE" | "KIT_PURCHASE";
   description?: string;
   amount: number;
-  status: 'PENDING' | 'PAID' | 'OVERDUE';
+  status: "PENDING" | "PAID" | "OVERDUE";
   due_date: string;
   paid_at?: string;
   payment_link?: string;
+  created_at?: string;
 }
 
-export type StudentStatus = 'ACTIVE' | 'INACTIVE' | 'PENDING' | 'DROPOUT' | 'GRADUATED';
+export type StudentStatus =
+  "ACTIVE" | "INACTIVE" | "PENDING" | "DROPOUT" | "GRADUATED";
 
 export interface Student {
   id: string;
@@ -92,37 +100,53 @@ export interface Batch {
 
 export async function getUserRole(userId: string): Promise<UserRole | null> {
   const { data, error } = await supabase
-    .from('user_roles')
-    .select('role')
-    .eq('user_id', userId)
-    .maybeSingle();
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .limit(10);
 
   if (error) {
     // Only log actual errors, not "no rows" which is expected for new users
-    if (error.code !== 'PGRST116') {
-      console.error('Error fetching user role:', error);
+    if (error.code !== "PGRST116") {
+      console.error("Error fetching user role:", error);
     }
-    return null;
+    throw error;
   }
 
-  if (!data) {
-    return null;
-  }
+  const roles = (data || []).map((row) => row.role);
+  if (roles.includes("super_admin")) return "super_admin";
 
-  return data.role as UserRole;
+  // New staff and parent roles are managed by Head Office through ERP memberships.
+  const { data: memberships, error: membershipError } = await supabase
+    .from("erp_memberships")
+    .select("role,active")
+    .eq("user_id", userId);
+  if (membershipError) return null;
+  if (roles.includes("franchise_owner") && !memberships?.length)
+    return "franchise_owner";
+  const membershipRoles = (memberships || [])
+    .filter((row) => row.active)
+    .map((row) => row.role);
+  return (
+    (
+      ["franchise_owner", "teacher", "receptionist", "parent"] as UserRole[]
+    ).find((role) => membershipRoles.includes(role)) ?? null
+  );
 }
 
-export async function getUserProfile(userId: string): Promise<UserProfile | null> {
+export async function getUserProfile(
+  userId: string,
+): Promise<UserProfile | null> {
   const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
+    .from("profiles")
+    .select("*")
+    .eq("id", userId)
     .maybeSingle();
 
   if (error) {
     // Only log actual errors, not "no rows" which is expected for new users
-    if (error.code !== 'PGRST116') {
-      console.error('Error fetching user profile:', error);
+    if (error.code !== "PGRST116") {
+      console.error("Error fetching user profile:", error);
     }
     return null;
   }
@@ -134,31 +158,35 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
   return data as UserProfile;
 }
 
-export async function getFinanceLedger(franchiseId: string): Promise<FinanceLedgerEntry[]> {
+export async function getFinanceLedger(
+  franchiseId: string,
+): Promise<FinanceLedgerEntry[]> {
   const { data, error } = await supabase
-    .from('finance_ledger')
-    .select('*')
-    .eq('franchise_id', franchiseId)
-    .order('created_at', { ascending: false });
+    .from("finance_ledger")
+    .select("*")
+    .eq("franchise_id", franchiseId)
+    .order("created_at", { ascending: false });
 
   if (error) {
-    console.error('Error fetching finance ledger:', error);
-    return [];
+    console.error("Error fetching finance ledger:", error);
+    throw error;
   }
 
   return data as FinanceLedgerEntry[];
 }
 
-export async function getTotalOutstandingDues(franchiseId: string): Promise<number> {
+export async function getTotalOutstandingDues(
+  franchiseId: string,
+): Promise<number> {
   const { data, error } = await supabase
-    .from('finance_ledger')
-    .select('amount')
-    .eq('franchise_id', franchiseId)
-    .neq('status', 'PAID');
+    .from("finance_ledger")
+    .select("amount")
+    .eq("franchise_id", franchiseId)
+    .neq("status", "PAID");
 
   if (error) {
-    console.error('Error fetching outstanding dues:', error);
-    return 0;
+    console.error("Error fetching outstanding dues:", error);
+    throw error;
   }
 
   return data.reduce((sum, entry) => sum + Number(entry.amount), 0);
@@ -170,47 +198,49 @@ export async function getTotalOutstandingDues(franchiseId: string): Promise<numb
 
 export async function getBatches(franchiseId: string): Promise<Batch[]> {
   const { data, error } = await supabase
-    .from('batches')
-    .select('*')
-    .eq('franchise_id', franchiseId)
-    .eq('is_active', true)
-    .order('name');
+    .from("batches")
+    .select("*")
+    .eq("franchise_id", franchiseId)
+    .eq("is_active", true)
+    .order("name");
 
   if (error) {
-    console.error('Error fetching batches:', error);
-    return [];
+    console.error("Error fetching batches:", error);
+    throw error;
   }
 
   return data as Batch[];
 }
 
-export async function getBatchesWithStudentCount(franchiseId: string): Promise<Batch[]> {
+export async function getBatchesWithStudentCount(
+  franchiseId: string,
+): Promise<Batch[]> {
   const { data: batches, error: batchError } = await supabase
-    .from('batches')
-    .select('*')
-    .eq('franchise_id', franchiseId)
-    .eq('is_active', true)
-    .order('name');
+    .from("batches")
+    .select("*")
+    .eq("franchise_id", franchiseId)
+    .eq("is_active", true)
+    .order("name");
 
   if (batchError) {
-    console.error('Error fetching batches:', batchError);
-    return [];
+    console.error("Error fetching batches:", batchError);
+    throw batchError;
   }
 
   // Get student counts for each batch
   const batchesWithCounts = await Promise.all(
     (batches || []).map(async (batch) => {
       const { count } = await supabase
-        .from('students')
-        .select('*', { count: 'exact', head: true })
-        .eq('batch_id', batch.id)
-        .neq('status', 'DROPOUT');
+        .from("students")
+        .select("*", { count: "exact", head: true })
+        .eq("batch_id", batch.id)
+        .neq("status", "DROPOUT");
 
       return {
         ...batch,
         student_count: count || 0,
       };
-    })
+    }),
   );
 
   return batchesWithCounts;
@@ -222,17 +252,19 @@ export async function getBatchesWithStudentCount(franchiseId: string): Promise<B
 
 export async function getStudents(franchiseId: string): Promise<Student[]> {
   const { data, error } = await supabase
-    .from('students')
-    .select(`
+    .from("students")
+    .select(
+      `
       *,
       batch:batches(id, name, level, schedule)
-    `)
-    .eq('franchise_id', franchiseId)
-    .order('created_at', { ascending: false });
+    `,
+    )
+    .eq("franchise_id", franchiseId)
+    .order("created_at", { ascending: false });
 
   if (error) {
-    console.error('Error fetching students:', error);
-    return [];
+    console.error("Error fetching students:", error);
+    throw error;
   }
 
   return data as Student[];
@@ -251,18 +283,18 @@ export async function createStudent(studentData: {
   photo_url?: string;
 }): Promise<Student | null> {
   const { data, error } = await supabase
-    .from('students')
+    .from("students")
     .insert({
       ...studentData,
-      status: 'PENDING',
+      status: "PENDING",
       level: studentData.level || 1,
-      joining_date: new Date().toISOString().split('T')[0],
+      joining_date: new Date().toISOString().split("T")[0],
     })
     .select()
     .single();
 
   if (error) {
-    console.error('Error creating student:', error);
+    console.error("Error creating student:", error);
     throw error;
   }
 
@@ -271,15 +303,15 @@ export async function createStudent(studentData: {
 
 export async function updateStudentStatus(
   studentId: string,
-  status: StudentStatus
+  status: StudentStatus,
 ): Promise<boolean> {
   const { error } = await supabase
-    .from('students')
+    .from("students")
     .update({ status, updated_at: new Date().toISOString() })
-    .eq('id', studentId);
+    .eq("id", studentId);
 
   if (error) {
-    console.error('Error updating student status:', error);
+    console.error("Error updating student status:", error);
     return false;
   }
 
@@ -288,15 +320,15 @@ export async function updateStudentStatus(
 
 export async function updateStudent(
   studentId: string,
-  updates: Partial<Student>
+  updates: Partial<Student>,
 ): Promise<boolean> {
   const { error } = await supabase
-    .from('students')
+    .from("students")
     .update({ ...updates, updated_at: new Date().toISOString() })
-    .eq('id', studentId);
+    .eq("id", studentId);
 
   if (error) {
-    console.error('Error updating student:', error);
+    console.error("Error updating student:", error);
     return false;
   }
 
@@ -310,25 +342,25 @@ export async function updateStudent(
 export async function uploadStudentPhoto(
   franchiseId: string,
   studentId: string,
-  file: File
+  file: File,
 ): Promise<string | null> {
-  const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+  const fileExt = file.name.split(".").pop()?.toLowerCase() || "jpg";
   const fileName = `${franchiseId}/${studentId}.${fileExt}`;
 
   const { error: uploadError } = await supabase.storage
-    .from('student-photos')
+    .from("student-photos")
     .upload(fileName, file, {
       upsert: true,
       contentType: file.type,
     });
 
   if (uploadError) {
-    console.error('Error uploading photo:', uploadError);
+    console.error("Error uploading photo:", uploadError);
     throw uploadError;
   }
 
   const { data: urlData } = supabase.storage
-    .from('student-photos')
+    .from("student-photos")
     .getPublicUrl(fileName);
 
   return urlData.publicUrl;
@@ -336,14 +368,14 @@ export async function uploadStudentPhoto(
 
 export async function deleteStudentPhoto(
   franchiseId: string,
-  studentId: string
+  studentId: string,
 ): Promise<boolean> {
   // Try common extensions
-  const extensions = ['jpg', 'jpeg', 'png', 'webp'];
-  
+  const extensions = ["jpg", "jpeg", "png", "webp"];
+
   for (const ext of extensions) {
     const fileName = `${franchiseId}/${studentId}.${ext}`;
-    await supabase.storage.from('student-photos').remove([fileName]);
+    await supabase.storage.from("student-photos").remove([fileName]);
   }
 
   return true;
@@ -353,7 +385,7 @@ export async function deleteStudentPhoto(
 // Inventory & Products Functions
 // ============================================
 
-export type OrderStatus = 'PLACED' | 'DISPATCHED' | 'DELIVERED' | 'CANCELLED';
+export type OrderStatus = "PLACED" | "DISPATCHED" | "DELIVERED" | "CANCELLED";
 
 export interface Product {
   id: string;
@@ -396,154 +428,107 @@ export interface OrderItem {
 
 export async function getProducts(): Promise<Product[]> {
   const { data, error } = await supabase
-    .from('products')
-    .select('*')
-    .eq('is_active', true)
-    .order('name');
+    .from("products")
+    .select("*")
+    .eq("is_active", true)
+    .order("name");
 
   if (error) {
-    console.error('Error fetching products:', error);
-    return [];
+    console.error("Error fetching products:", error);
+    throw error;
   }
 
   return data as Product[];
 }
 
-export async function getFranchiseInventory(franchiseId: string): Promise<FranchiseInventory[]> {
+export async function getFranchiseInventory(
+  franchiseId: string,
+): Promise<FranchiseInventory[]> {
   const { data, error } = await supabase
-    .from('franchise_inventory')
-    .select(`
+    .from("franchise_inventory")
+    .select(
+      `
       *,
       product:products(*)
-    `)
-    .eq('franchise_id', franchiseId);
+    `,
+    )
+    .eq("franchise_id", franchiseId);
 
   if (error) {
-    console.error('Error fetching franchise inventory:', error);
-    return [];
+    console.error("Error fetching franchise inventory:", error);
+    throw error;
   }
 
   return data as FranchiseInventory[];
 }
 
-export async function getProductsWithInventory(franchiseId: string): Promise<(Product & { quantity: number; low_stock_limit: number })[]> {
+export async function getProductsWithInventory(
+  franchiseId: string,
+): Promise<(Product & { quantity: number; low_stock_limit: number })[]> {
   // First get all products
   const { data: products, error: productError } = await supabase
-    .from('products')
-    .select('*')
-    .eq('is_active', true)
-    .order('name');
+    .from("products")
+    .select("*")
+    .eq("is_active", true)
+    .order("name");
 
   if (productError) {
-    console.error('Error fetching products:', productError);
-    return [];
+    console.error("Error fetching products:", productError);
+    throw productError;
   }
 
   // Then get inventory for this franchise
   const { data: inventory, error: invError } = await supabase
-    .from('franchise_inventory')
-    .select('*')
-    .eq('franchise_id', franchiseId);
+    .from("franchise_inventory")
+    .select("*")
+    .eq("franchise_id", franchiseId);
 
   if (invError) {
-    console.error('Error fetching inventory:', invError);
+    throw invError;
   }
 
   // Merge products with inventory
-  const inventoryMap = new Map((inventory || []).map(inv => [inv.product_id, inv]));
-  
-  return (products || []).map(product => ({
+  const inventoryMap = new Map(
+    (inventory || []).map((inv) => [inv.product_id, inv]),
+  );
+
+  return (products || []).map((product) => ({
     ...product,
     quantity: inventoryMap.get(product.id)?.quantity || 0,
     low_stock_limit: inventoryMap.get(product.id)?.low_stock_limit || 5,
   }));
 }
 
-export async function getFranchiseOrders(franchiseId: string): Promise<Order[]> {
+export async function getFranchiseOrders(
+  franchiseId: string,
+): Promise<Order[]> {
   const { data, error } = await supabase
-    .from('orders')
-    .select('*')
-    .eq('franchise_id', franchiseId)
-    .order('created_at', { ascending: false })
+    .from("orders")
+    .select("*")
+    .eq("franchise_id", franchiseId)
+    .order("created_at", { ascending: false })
     .limit(10);
 
   if (error) {
-    console.error('Error fetching orders:', error);
-    return [];
+    console.error("Error fetching orders:", error);
+    throw error;
   }
 
   return data as Order[];
 }
 
-export async function createOrder(
+export async function getActiveStudentCount(
   franchiseId: string,
-  items: { productId: string; quantity: number; unitPrice: number }[],
-  totalAmount: number
-): Promise<Order | null> {
-  // Create the order
-  const { data: order, error: orderError } = await supabase
-    .from('orders')
-    .insert({
-      franchise_id: franchiseId,
-      total_amount: totalAmount,
-      status: 'PLACED',
-    })
-    .select()
-    .single();
-
-  if (orderError) {
-    console.error('Error creating order:', orderError);
-    throw orderError;
-  }
-
-  // Create order items
-  const orderItems = items.map(item => ({
-    order_id: order.id,
-    product_id: item.productId,
-    quantity: item.quantity,
-    unit_price: item.unitPrice,
-  }));
-
-  const { error: itemsError } = await supabase
-    .from('order_items')
-    .insert(orderItems);
-
-  if (itemsError) {
-    console.error('Error creating order items:', itemsError);
-  }
-
-  // Create a finance ledger entry for this order
-  const invoiceId = `INV-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`;
-  
-  const { error: ledgerError } = await supabase
-    .from('finance_ledger')
-    .insert({
-      franchise_id: franchiseId,
-      invoice_id: invoiceId,
-      type: 'KIT_PURCHASE',
-      description: `Order #${order.id.substring(0, 8)}`,
-      amount: totalAmount,
-      status: 'PENDING',
-      due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    });
-
-  if (ledgerError) {
-    console.error('Error creating ledger entry:', ledgerError);
-  }
-
-  return order as Order;
-}
-
-export async function getActiveStudentCount(franchiseId: string): Promise<number> {
+): Promise<number> {
   const { count, error } = await supabase
-    .from('students')
-    .select('*', { count: 'exact', head: true })
-    .eq('franchise_id', franchiseId)
-    .eq('status', 'ACTIVE');
+    .from("students")
+    .select("*", { count: "exact", head: true })
+    .eq("franchise_id", franchiseId)
+    .eq("status", "ACTIVE");
 
   if (error) {
-    console.error('Error counting students:', error);
-    return 0;
+    console.error("Error counting students:", error);
+    throw error;
   }
 
   return count || 0;
@@ -551,17 +536,19 @@ export async function getActiveStudentCount(franchiseId: string): Promise<number
 
 export async function getTotalKitStock(franchiseId: string): Promise<number> {
   const { data, error } = await supabase
-    .from('franchise_inventory')
-    .select(`
+    .from("franchise_inventory")
+    .select(
+      `
       quantity,
       product:products!inner(category)
-    `)
-    .eq('franchise_id', franchiseId)
-    .eq('product.category', 'kit');
+    `,
+    )
+    .eq("franchise_id", franchiseId)
+    .eq("product.category", "kit");
 
   if (error) {
-    console.error('Error getting kit stock:', error);
-    return 0;
+    console.error("Error getting kit stock:", error);
+    throw error;
   }
 
   return (data || []).reduce((sum, inv) => sum + (inv.quantity || 0), 0);
@@ -579,7 +566,7 @@ export async function createBatch(batchData: {
   max_students?: number;
 }): Promise<Batch | null> {
   const { data, error } = await supabase
-    .from('batches')
+    .from("batches")
     .insert({
       ...batchData,
       max_students: batchData.max_students || 15,
@@ -589,28 +576,30 @@ export async function createBatch(batchData: {
     .single();
 
   if (error) {
-    console.error('Error creating batch:', error);
+    console.error("Error creating batch:", error);
     throw error;
   }
 
   return data as Batch;
 }
 
-export async function getStudentsForBatch(batchId: string): Promise<{ id: string; name: string; parentPhone: string }[]> {
+export async function getStudentsForBatch(
+  batchId: string,
+): Promise<{ id: string; name: string; parentPhone: string }[]> {
   const { data, error } = await supabase
-    .from('students')
-    .select('id, full_name, parent_phone')
-    .eq('batch_id', batchId)
-    .neq('status', 'DROPOUT');
+    .from("students")
+    .select("id, full_name, parent_phone")
+    .eq("batch_id", batchId)
+    .neq("status", "DROPOUT");
 
   if (error) {
-    console.error('Error fetching students for batch:', error);
-    return [];
+    console.error("Error fetching students for batch:", error);
+    throw error;
   }
 
-  return (data || []).map(s => ({
+  return (data || []).map((s) => ({
     id: s.id,
     name: s.full_name,
-    parentPhone: s.parent_phone || '',
+    parentPhone: s.parent_phone || "",
   }));
 }

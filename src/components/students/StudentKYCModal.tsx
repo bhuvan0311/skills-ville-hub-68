@@ -80,18 +80,7 @@ export function StudentKYCModal({
     }
   }, [open]);
 
-  const handlePhotoCapture = () => {
-    // Simulate camera capture with a placeholder
-    toast({
-      title: 'Camera Activated',
-      description: 'Camera capture simulated. In production, this would open the camera.',
-    });
-    setFormData((prev) => ({
-      ...prev,
-      photo: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face',
-      photoFile: undefined,
-    }));
-  };
+  const handlePhotoCapture = () => { fileInputRef.current?.click(); };
 
   const handlePhotoUpload = () => {
     fileInputRef.current?.click();
@@ -139,6 +128,7 @@ export function StudentKYCModal({
     if (!formData.parentName.trim()) {
       newErrors.parentName = 'Parent name is required';
     }
+    if (formData.dateOfBirth && formData.dateOfBirth > new Date().toISOString().slice(0,10)) newErrors.dateOfBirth='Date of birth cannot be in the future';
     if (!formData.dateOfBirth) {
       newErrors.dateOfBirth = 'Date of birth is required';
     }
