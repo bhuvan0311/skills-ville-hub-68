@@ -526,6 +526,7 @@ export default function ErpWorkspace() {
         >
           <img src={logo} alt="Skills Ville — Future Ready" />
           <span>
+            <strong>Skills Ville</strong>
             <small>FRANCHISE WORKSPACE</small>
           </span>
         </Link>

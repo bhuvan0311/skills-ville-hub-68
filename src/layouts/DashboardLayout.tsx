@@ -131,14 +131,19 @@ export function DashboardLayout() {
         )}
       >
         {/* Logo */}
-        <div className="flex items-center justify-center px-4 py-6 border-b border-sidebar-border bg-card">
-          <div className="w-full rounded-xl bg-[#faf8f1] p-2">
+        <div className="flex items-center justify-center gap-3 px-3 py-4 border-b border-sidebar-border bg-card">
+          <div className="shrink-0 rounded-md bg-[#faf8f1] p-1">
             <img
               src={skillsVilleLogo}
               alt="Skills Ville — Future Ready"
-              className="w-full h-auto"
+              className={cn("h-auto", sidebarCollapsed ? "w-10" : "w-14")}
             />
           </div>
+          {!sidebarCollapsed && (
+            <span className="text-sm font-semibold text-foreground">
+              Skills Ville
+            </span>
+          )}
         </div>
 
         {/* Navigation */}
@@ -181,12 +186,15 @@ export function DashboardLayout() {
           />
           <aside className="absolute left-0 top-0 bottom-0 w-72 bg-sidebar border-r border-sidebar-border animate-slide-in-right">
             <div className="flex items-center justify-between gap-3 p-4 border-b border-sidebar-border">
-              <div className="rounded-xl bg-[#faf8f1] p-2">
+              <div className="flex items-center gap-3">
                 <img
                   src={skillsVilleLogo}
                   alt="Skills Ville — Future Ready"
-                  className="w-48 h-auto"
+                  className="w-16 h-auto rounded-md bg-[#faf8f1] p-1"
                 />
+                <span className="text-sm font-semibold text-sidebar-foreground">
+                  Skills Ville
+                </span>
               </div>
               <Button
                 variant="ghost"
@@ -224,7 +232,7 @@ export function DashboardLayout() {
                 <img
                   src={skillsVilleLogo}
                   alt="Skills Ville"
-                  className="w-20 sm:w-28 h-auto rounded-md bg-[#faf8f1] p-1"
+                  className="w-16 h-auto rounded-md bg-[#faf8f1] p-1"
                 />
                 <h2 className="hidden xl:block text-base font-semibold text-foreground">
                   {userRole === "super_admin"

@@ -22,29 +22,29 @@
 }
 .sv-brand {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 14px;
-  padding: 24px 18px;
+  gap: 12px;
+  padding: 20px 18px;
   text-decoration: none;
 }
 .sv-brand img {
   height: auto;
-  width: 100%;
-  border-radius: 12px;
+  width: 64px;
+  flex-shrink: 0;
+  border-radius: 6px;
   background: #faf8f1;
-  padding: 12px 8px;
+  padding: 4px;
 }
 .sv-brand strong {
   display: block;
-  font-size: 21px;
+  font-size: 16px;
   color: #fff;
   letter-spacing: -0.5px;
 }
 .sv-brand small {
   display: block;
-  font-size: 9px;
-  letter-spacing: 1.8px;
+  font-size: 8px;
+  letter-spacing: 0.8px;
   margin-top: 5px;
   color: #98b6c7;
 }
@@ -761,7 +761,7 @@
   }
   .sv-mobile-brand img {
     display: block;
-    width: 112px;
+    width: 64px;
     height: auto;
     background: #faf8f1;
     border-radius: 6px;
@@ -870,7 +870,7 @@
     padding-inline: 12px;
   }
   .sv-mobile-brand img {
-    width: 92px;
+    width: 64px;
   }
   .sv-topbar select {
     max-width: 85px;

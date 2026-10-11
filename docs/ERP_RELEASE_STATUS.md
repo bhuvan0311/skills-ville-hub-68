@@ -34,7 +34,7 @@ GitHub's previously inspected jobs could not start because of an account billing
 
 ## Branding follow-up
 
-The user's supplied Skills Ville SVG is now displayed with tight artwork bounds (`229 192 384 210`) instead of the original full Illustrator artboard. Its paths and colours are unchanged. The login has a large, proportional logo on a warm neutral panel, a subdued navy background, readable light/dark account forms and labelled password controls. The workspace and retained Head Office layouts have larger brand placements; the same supplied SVG is used for the favicon and subtle retained-page watermark.
+The user's supplied Skills Ville SVG is now displayed with tight artwork bounds (`229 192 384 210`) instead of the original full Illustrator artboard. Its paths and colours are unchanged. The login has a compact, proportional logo (72px wide on desktop, 64px on phones) on a warm neutral panel, a subdued navy background, readable light/dark account forms and labelled password controls. The workspace and retained Head Office layouts use compact logos alongside the brand name; the same supplied SVG is used for the favicon and subtle retained-page watermark.
 
 Type checking, the 16 frontend tests and production build passed. Desktop light/dark login rendering, empty-field feedback, password visibility, workspace navigation and 320px/390px phone-frame layouts were inspected. The phone frames had no horizontal overflow; the workspace used labelled sample fixtures with saving disabled. The separate design server now limits dependency scanning to its own entry and uses an isolated cache. Live-session pilot limits above remain unchanged.
 
