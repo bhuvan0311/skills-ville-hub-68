@@ -1,15 +1,15 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 /* Skills Ville Abacus Design System */
 /* Typography: Inter for clean, readable text at all sizes */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @layer base {
   :root {
     /* Core Backgrounds: Clean Whites & Soft Grays */
-    --background: 210 17% 98%; /* #f8fafc - Soft Light Gray */
+    --background: 120 9% 94%; /* Muted stone canvas */
     --foreground: 222 47% 11%; /* Dark slate for text */
 
     /* Cards & Containers: Pure White for data density */
@@ -20,7 +20,7 @@
     --popover-foreground: 222 47% 11%;
 
     /* Primary: Deep Royal Blue (Trust/Corporate) */
-    --primary: 221 83% 43%; /* Deeper, more royal blue */
+    --primary: 163 32% 25%; /* Restrained deep green */
     --primary-foreground: 0 0% 100%;
 
     /* Secondary: Light gray for subtle backgrounds */
@@ -50,19 +50,19 @@
     /* Borders & Inputs */
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 221 83% 43%;
+    --ring: 163 32% 35%;
 
     --radius: 0.625rem; /* Slightly smaller for cleaner look */
 
     /* Sidebar: Clean white with subtle hierarchy */
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 222 47% 25%;
-    --sidebar-primary: 221 83% 43%;
+    --sidebar-primary: 163 32% 25%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 210 17% 96%;
     --sidebar-accent-foreground: 222 47% 11%;
     --sidebar-border: 214 32% 91%;
-    --sidebar-ring: 221 83% 43%;
+    --sidebar-ring: 163 32% 35%;
 
     /* Subtle gradient for main background */
     --gradient-mesh-1: radial-gradient(at 0% 0%, hsl(221 83% 97%) 0px, transparent 50%),

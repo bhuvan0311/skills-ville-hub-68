@@ -1,0 +1,23 @@
+The existing app substituted sample records for empty or failed database results, simulated payment success, and granted franchise-owner access when role verification failed. This change adds an ERP workspace backed by scoped database records and replaces those misleading paths with verified access, persistence failures and explicit setup states.
+
+The workspace covers admissions, student fees/instalments/receipts, discount approval, classes and attendance, learning records, stock/procurement, expenses and royalty statements, franchise renewals, staff permissions, parent appointments, consent-based WhatsApp drafts and audit history. Head Office sets fees, royalty rules and payment details. Owners advance students only after the database verifies 12 distinct attended classes at their current level. Existing 70/100 exam marking remains separate.
+
+Payments use manual UPI/bank/cash references and explicit bank verification before issuing an immutable receipt. WhatsApp opens a reviewed click-to-chat draft; it never claims that a message was sent. No generative AI or business-data generation is used.
+
+The supplied Skills Ville SVG has its blank artboard margins removed, preserving the artwork and colours. Compact app-sized logos, a muted navy login background, softer workspace surfaces and legible light/dark forms provide consistent branding. Desktop and 320px/390px phone-frame layouts were reviewed, including password visibility, validation and navigation. The fixture-only design server has its own entry scan and dependency cache.
+
+Validation completed locally:
+
+- Production build and TypeScript check pass.
+- 16 frontend/calculation/access/photo-path tests pass.
+- 18 PostgreSQL integration checks pass for both historical-core and fresh-core setup paths, covering tenant isolation, exact instalments, atomic admissions, payment/receipt idempotency, overpayment and discount rejection, stock/procurement, timetable clashes, progression, exams, audit immutability and function permissions.
+- Browser checks pass for 11 internal module screens, parent/teacher views, failed-save feedback and mobile navigation/overflow; these use clearly labelled design fixtures, with saving disabled.
+- Dependency lock supports a clean install; automated CI checks are included.
+
+Staging setup is now complete in the new, user-created Mumbai Supabase project. Six migrations applied successfully; all 35 application tables have RLS. The owner's confirmed account has its Head Office role. Rollback-only checks passed on real PostgreSQL 17. Approved temporary payment/stock records passed repeated-request safeguards and were cleaned up, but their requests did not overlap, so concurrency under simultaneous execution remains unverified.
+
+The release candidate is deployed at [franchise.skillsville.in](https://franchise.skillsville.in) on Cloudflare Pages, the user's selected Free host. Cloudflare's hosted build also passed all the checks listed above. DNS and HTTPS are verified; the login screen was inspected, and the owner reported successful private Head Office sign-in on the final domain. The user explicitly approved a public login-page audience; ERP data requires authenticated role access. Empty Head Office workspaces now direct administrators to create/select centres rather than incorrectly asking them to have their own account assigned. Other-role sessions, Storage HTTP upload/download and a full business workflow remain pending; do not declare unrestricted franchise rollout complete. Fees and royalties remain unset for Head Office configuration. The security advisor retains expected authenticated security-definer warnings and reports leaked-password protection disabled (a paid Supabase capability); no plan upgrade was made. See [release evidence](ERP_RELEASE_STATUS.md), [setup and handover](ERP_SETUP_AND_HANDOVER.md), [custom-domain setup](CUSTOM_DOMAIN_SETUP.md), [desktop preview](screenshots/erp-desktop.png) and [mobile preview](screenshots/erp-mobile.png).
+
+The connected project's public self-registration and anonymous sign-in are disabled; email confirmation remains required. The Auth Site URL is the final domain, verified after reload. Direct unsigned-in navigation to an ERP route and refreshing the resulting login route work without browser warnings/errors. Account invitations and password recovery have not been verified.
+
+Cloudflare successfully deployed the Head Office setup fix from `f95ad72`; its build gates all passed. GitHub Actions is separately blocked: GitHub's annotation says the account is locked due to a billing issue, so no runner steps started. Rerun GitHub Actions after the account issue is resolved.

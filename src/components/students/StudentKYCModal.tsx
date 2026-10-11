@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -6,21 +6,21 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Camera, Upload, Loader2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { Batch, createStudent, uploadStudentPhoto } from '@/lib/supabase';
+} from "@/components/ui/select";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Camera, Upload, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Batch, createStudent, uploadStudentPhoto } from "@/lib/supabase";
 
 interface StudentKYCModalProps {
   open: boolean;
@@ -41,37 +41,39 @@ export interface StudentKYCData {
   photoFile?: File;
 }
 
-export function StudentKYCModal({ 
-  open, 
-  onOpenChange, 
+export function StudentKYCModal({
+  open,
+  onOpenChange,
   onSuccess,
   franchiseId,
-  batches 
+  batches,
 }: StudentKYCModalProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<StudentKYCData>({
-    name: '',
-    parentName: '',
-    dateOfBirth: '',
-    phone: '',
-    email: '',
+    name: "",
+    parentName: "",
+    dateOfBirth: "",
+    phone: "",
+    email: "",
     batchId: undefined,
     photo: undefined,
     photoFile: undefined,
   });
-  const [errors, setErrors] = useState<Partial<Record<keyof StudentKYCData, string>>>({});
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof StudentKYCData, string>>
+  >({});
 
   // Reset form when modal opens
   useEffect(() => {
     if (open) {
       setFormData({
-        name: '',
-        parentName: '',
-        dateOfBirth: '',
-        phone: '',
-        email: '',
+        name: "",
+        parentName: "",
+        dateOfBirth: "",
+        phone: "",
+        email: "",
         batchId: undefined,
         photo: undefined,
         photoFile: undefined,
@@ -81,16 +83,7 @@ export function StudentKYCModal({
   }, [open]);
 
   const handlePhotoCapture = () => {
-    // Simulate camera capture with a placeholder
-    toast({
-      title: 'Camera Activated',
-      description: 'Camera capture simulated. In production, this would open the camera.',
-    });
-    setFormData((prev) => ({
-      ...prev,
-      photo: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face',
-      photoFile: undefined,
-    }));
+    fileInputRef.current?.click();
   };
 
   const handlePhotoUpload = () => {
@@ -101,11 +94,11 @@ export function StudentKYCModal({
     const file = e.target.files?.[0];
     if (file) {
       // Validate file type
-      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
         toast({
-          title: 'Invalid file type',
-          description: 'Please upload a JPG, PNG, or WebP image.',
-          variant: 'destructive',
+          title: "Invalid file type",
+          description: "Please upload a JPG, PNG, or WebP image.",
+          variant: "destructive",
         });
         return;
       }
@@ -113,9 +106,9 @@ export function StudentKYCModal({
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         toast({
-          title: 'File too large',
-          description: 'Please upload an image smaller than 5MB.',
-          variant: 'destructive',
+          title: "File too large",
+          description: "Please upload an image smaller than 5MB.",
+          variant: "destructive",
         });
         return;
       }
@@ -132,20 +125,25 @@ export function StudentKYCModal({
 
   const validateForm = () => {
     const newErrors: Partial<Record<keyof StudentKYCData, string>> = {};
-    
+
     if (!formData.name.trim()) {
-      newErrors.name = 'Student name is required';
+      newErrors.name = "Student name is required";
     }
     if (!formData.parentName.trim()) {
-      newErrors.parentName = 'Parent name is required';
+      newErrors.parentName = "Parent name is required";
     }
+    if (
+      formData.dateOfBirth &&
+      formData.dateOfBirth > new Date().toISOString().slice(0, 10)
+    )
+      newErrors.dateOfBirth = "Date of birth cannot be in the future";
     if (!formData.dateOfBirth) {
-      newErrors.dateOfBirth = 'Date of birth is required';
+      newErrors.dateOfBirth = "Date of birth is required";
     }
     if (!formData.phone.trim()) {
-      newErrors.phone = 'Phone number is required';
-    } else if (!/^[6-9]\d{9}$/.test(formData.phone.replace(/\D/g, ''))) {
-      newErrors.phone = 'Enter a valid 10-digit phone number';
+      newErrors.phone = "Phone number is required";
+    } else if (!/^[6-9]\d{9}$/.test(formData.phone.replace(/\D/g, ""))) {
+      newErrors.phone = "Enter a valid 10-digit phone number";
     }
 
     setErrors(newErrors);
@@ -165,14 +163,14 @@ export function StudentKYCModal({
         full_name: formData.name.trim(),
         dob: formData.dateOfBirth || undefined,
         parent_name: formData.parentName.trim(),
-        parent_phone: `+91${formData.phone.replace(/\D/g, '')}`,
+        parent_phone: `+91${formData.phone.replace(/\D/g, "")}`,
         parent_email: formData.email?.trim() || undefined,
         batch_id: formData.batchId || undefined,
         level: 1,
       });
 
       if (!newStudent) {
-        throw new Error('Failed to create student record');
+        throw new Error("Failed to create student record");
       }
 
       // Upload photo if present
@@ -181,41 +179,45 @@ export function StudentKYCModal({
           const photoUrl = await uploadStudentPhoto(
             franchiseId,
             newStudent.id,
-            formData.photoFile
+            formData.photoFile,
           );
 
           if (photoUrl) {
             // Update student with photo URL
-            const { supabase } = await import('@/lib/supabase');
-            await supabase
-              .from('students')
+            const { supabase } = await import("@/lib/supabase");
+            const { error } = await supabase
+              .from("students")
               .update({ photo_url: photoUrl })
-              .eq('id', newStudent.id);
+              .eq("id", newStudent.id)
+              .select("id")
+              .single();
+            if (error) throw error;
           }
         } catch (photoError) {
-          console.error('Photo upload failed:', photoError);
+          console.error("Photo upload failed:", photoError);
           // Continue anyway - student was created
           toast({
-            title: 'Photo upload failed',
-            description: 'Student enrolled but photo could not be uploaded.',
-            variant: 'destructive',
+            title: "Photo upload failed",
+            description: "Student enrolled but photo could not be uploaded.",
+            variant: "destructive",
           });
         }
       }
 
       toast({
-        title: 'Student Enrolled!',
+        title: "Student Enrolled!",
         description: `${formData.name} has been successfully enrolled.`,
       });
 
       onSuccess();
       onOpenChange(false);
     } catch (error) {
-      console.error('Error creating student:', error);
+      console.error("Error creating student:", error);
       toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to enroll student',
-        variant: 'destructive',
+        title: "Error",
+        description:
+          error instanceof Error ? error.message : "Failed to enroll student",
+        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
@@ -243,7 +245,7 @@ export function StudentKYCModal({
             <Avatar className="h-24 w-24 border-2 border-dashed border-border">
               <AvatarImage src={formData.photo} />
               <AvatarFallback className="bg-muted text-muted-foreground text-2xl">
-                {formData.name ? formData.name[0].toUpperCase() : '?'}
+                {formData.name ? formData.name[0].toUpperCase() : "?"}
               </AvatarFallback>
             </Avatar>
             <input
@@ -285,11 +287,15 @@ export function StudentKYCModal({
                 id="student-name"
                 placeholder="Enter student's full name"
                 value={formData.name}
-                onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
-                className={errors.name ? 'border-destructive' : ''}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, name: e.target.value }))
+                }
+                className={errors.name ? "border-destructive" : ""}
                 required
               />
-              {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
+              {errors.name && (
+                <p className="text-xs text-destructive">{errors.name}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -298,11 +304,18 @@ export function StudentKYCModal({
                 id="parent-name"
                 placeholder="Enter parent's name"
                 value={formData.parentName}
-                onChange={(e) => setFormData((prev) => ({ ...prev, parentName: e.target.value }))}
-                className={errors.parentName ? 'border-destructive' : ''}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    parentName: e.target.value,
+                  }))
+                }
+                className={errors.parentName ? "border-destructive" : ""}
                 required
               />
-              {errors.parentName && <p className="text-xs text-destructive">{errors.parentName}</p>}
+              {errors.parentName && (
+                <p className="text-xs text-destructive">{errors.parentName}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -311,11 +324,18 @@ export function StudentKYCModal({
                 id="dob"
                 type="date"
                 value={formData.dateOfBirth}
-                onChange={(e) => setFormData((prev) => ({ ...prev, dateOfBirth: e.target.value }))}
-                className={errors.dateOfBirth ? 'border-destructive' : ''}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    dateOfBirth: e.target.value,
+                  }))
+                }
+                className={errors.dateOfBirth ? "border-destructive" : ""}
                 required
               />
-              {errors.dateOfBirth && <p className="text-xs text-destructive">{errors.dateOfBirth}</p>}
+              {errors.dateOfBirth && (
+                <p className="text-xs text-destructive">{errors.dateOfBirth}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -328,12 +348,16 @@ export function StudentKYCModal({
                   id="phone"
                   placeholder="9876543210"
                   value={formData.phone}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, phone: e.target.value }))}
-                  className={`rounded-l-none ${errors.phone ? 'border-destructive' : ''}`}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, phone: e.target.value }))
+                  }
+                  className={`rounded-l-none ${errors.phone ? "border-destructive" : ""}`}
                   required
                 />
               </div>
-              {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
+              {errors.phone && (
+                <p className="text-xs text-destructive">{errors.phone}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -343,7 +367,9 @@ export function StudentKYCModal({
                 type="email"
                 placeholder="parent@example.com"
                 value={formData.email}
-                onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, email: e.target.value }))
+                }
               />
             </div>
 
@@ -351,7 +377,9 @@ export function StudentKYCModal({
               <Label htmlFor="batch">Assign Batch (Optional)</Label>
               <Select
                 value={formData.batchId}
-                onValueChange={(value) => setFormData((prev) => ({ ...prev, batchId: value }))}
+                onValueChange={(value) =>
+                  setFormData((prev) => ({ ...prev, batchId: value }))
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select a batch" />
@@ -378,7 +406,7 @@ export function StudentKYCModal({
                   Enrolling...
                 </>
               ) : (
-                'Enroll Student'
+                "Enroll Student"
               )}
             </Button>
           </DialogFooter>

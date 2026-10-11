@@ -1,0 +1,22 @@
+name: ERP checks
+on:
+  pull_request:
+  push:
+    branches: [main, codex/skills-ville-erp]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run test:db
+      - run: npm run test:db:fresh
+      - run: npm run build
