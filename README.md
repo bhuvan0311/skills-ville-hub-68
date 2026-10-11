@@ -1,73 +1,31 @@
-# Welcome to your Lovable project
+# Skills Ville Franchise ERP
 
-## Project info
+A React / TypeScript workspace for Skills Ville Abacus franchise operations and parent services, with Supabase authentication and PostgreSQL tenant permissions.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+Head Office configures fees, royalty terms and payment details. Student progression requires 12 attended classes at the current level. Payments use manual UPI/bank/cash references and verified receipts; WhatsApp uses reviewed click-to-chat drafts. No generative AI is used in the application.
 
-## How can I edit this code?
+## Setup
 
-There are several ways of editing your application.
+See [ERP setup and handover](docs/ERP_SETUP_AND_HANDOVER.md) for migrations, account provisioning, existing-data reconciliation, release gates and known limits. The actual live schema and production deployment are not verified by this repository change.
 
-**Use Lovable**
+Create an ignored .env.local from .env.example with the approved Supabase project URL and public client key. Never use a service-role key in browser variables.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+    npm ci --ignore-scripts --no-audit --no-fund
+    npm run dev
 
-Changes made via Lovable will be committed automatically to this repo.
+## Verification
 
-**Use your preferred IDE**
+    npm run typecheck
+    npm test
+    npm run test:db
+    npm run build
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+The database tests use an ephemeral PostgreSQL database; they never touch live records. GitHub Actions runs these checks when its account/runner access is available.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## Design review
 
-Follow these steps:
+    npm run preview:design
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+Open /erp/overview at the printed local address. This separate preview labels every fixture as sample data and disables saving. Its aliases and entry are excluded from the production build.
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+[Desktop preview](docs/screenshots/erp-desktop.png) · [Mobile preview](docs/screenshots/erp-mobile.png) · [Approved ERP proposal](docs/ERP_UPGRADE_PROPOSAL.md)

@@ -13,3 +13,5 @@ Validation completed locally:
 - Dependency lock supports a clean install; automated CI checks are included.
 
 Release remains pending staging setup. The actual Supabase schema, live account provisioning, concurrent database sessions and production deployment have not been verified. Apply the two reviewed migrations in staging, configure the public client connection, check any additional live policies and reconcile old stock/teacher data before merging an auto-deployed branch. See [setup and handover](ERP_SETUP_AND_HANDOVER.md), [desktop preview](screenshots/erp-desktop.png) and [mobile preview](screenshots/erp-mobile.png).
+
+Hosted CI is currently blocked: GitHub's annotation says the account is locked due to a billing issue, so no runner steps started. Local checks passed; rerun GitHub Actions after the account issue is resolved.

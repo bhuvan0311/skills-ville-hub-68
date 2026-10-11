@@ -63,6 +63,8 @@ Desktop/mobile review images are in `docs/screenshots`. They show labelled desig
 
 This is an implemented, locally tested ERP change. **No live database migration, production deployment, payment collection or WhatsApp message delivery has occurred.** A staging connection and authorised account provisioning are needed to verify and release it against real services.
 
+GitHub Actions was inspected after pushing the review branch. The jobs did not start: GitHub's check annotation reports, “The job was not started because your account is locked due to a billing issue.” Local checks pass; hosted CI must be rerun once the repository account issue is resolved. No billing settings were changed by this task.
+
 Cash-basis reports exclude unrecorded expenses, unissued royalties, taxes and refunds. They are operational reports, not statutory accounts or tax invoices. Issued royalty statements are immutable; configuration changes should be accompanied by reviewed effective-date rules. A royalty statement crossing the selected report boundary is excluded; choose matching periods.
 
 Records are paged from the database and tables show 25 rows at a time; reporting reads all accessible rows in the selected scope. High-volume deployments should add server-side aggregates and indexed reporting queries after measuring real data volumes. Role/tenant isolation is enforced in SQL; production needs a review of any additional live policies. The UI selects one primary account role; use separate logins for people needing distinct parent/staff roles until a role-switch workflow is specified.
