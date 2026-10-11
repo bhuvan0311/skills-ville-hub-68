@@ -720,11 +720,21 @@ export default function ErpWorkspace() {
           ) : !scope ? (
             <div className="sv-empty">
               <Building2 size={36} />
-              <h2>No centre assigned</h2>
+              <h2>
+                {userRole === "super_admin"
+                  ? "Select or create a centre"
+                  : "No centre assigned"}
+              </h2>
               <p>
-                Head Office must assign your account to a centre before records
-                can be managed.
+                {userRole === "super_admin"
+                  ? "Use the franchise directory to set up your centres, then select one to manage its records."
+                  : "Head Office must assign your account to a centre before records can be managed."}
               </p>
+              {userRole === "super_admin" && (
+                <Button asChild>
+                  <Link to="/admin/franchises">Open franchise directory</Link>
+                </Button>
+              )}
             </div>
           ) : !dataReady ? (
             <div className="sv-empty">

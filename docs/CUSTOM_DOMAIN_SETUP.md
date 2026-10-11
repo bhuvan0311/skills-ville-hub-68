@@ -1,19 +1,34 @@
 # Skills Ville ERP custom domain
 
-The user requested `franchise.skillsville.in` and approved a publicly reachable ERP login page on 11 October 2026. The domain is registered with Sites for project `appgprj_6acb6f84553481919363ec4aa8b43241`, custom-domain ID `appgdom_6acb7929a088819196c4cab8d7cc2c5d`. It is pending DNS verification and HTTPS certificate initialization; registration alone does not establish a live custom domain.
+The user selected Cloudflare Pages Free for `franchise.skillsville.in` on 11 October 2026 and approved a publicly reachable ERP login page. The existing Supabase project and ERP credentials carry over. The official Cloudflare GitHub app was authorized by the user for only `bhuvan0311/skills-ville-hub-68`; no other private repository was selected.
 
-The public DNS check returned GoDaddy nameservers `ns53.domaincontrol.com` and `ns54.domaincontrol.com`. The user chose to add the records privately with guidance.
+## Cloudflare deployment
 
-In [GoDaddy Domain Portfolio](https://dcc.godaddy.com), select **skillsville.in → DNS → Add New Record**. Add only these records, with the default TTL, and save. Names here are relative to `skillsville.in`:
+- Account ID: `81ed25bd7863992aa0b9a3c96c95d70a`.
+- Pages project: `skills-ville-franchise-erp`.
+- Initial deployed source: `4c74a8c5a60b766b551f5a0e3035bcd68d18e30c`.
+- Address: [Skills Ville ERP](https://skills-ville-franchise-erp.pages.dev).
+- Production branch: `codex/skills-ville-erp`, not the older `main` branch.
+- Build command: `npm run typecheck && npm test && npm run test:db && npm run test:db:fresh && npm run build`.
+- Output directory: `dist`; root directory: repository root; framework preset: None (explicit Vite build).
+- Build variables: `VITE_SUPABASE_URL` and the public `VITE_SUPABASE_PUBLISHABLE_KEY`. No privileged key is configured in the browser build.
 
-| Type | Name | Value |
-| --- | --- | --- |
-| CNAME | `franchise` | `custom-domains.chatgpt.site` |
-| TXT | `_openai-site-verification.franchise` | `openai-site-verification=09G-GUT2MsS9_sETB_78QsBFVuIWURYlgFo_F2QuOxk` |
-| TXT | `_cf-custom-hostname.franchise` | `fda750dc-5f58-4622-bcbe-ec84a27e6e68` |
+Cloudflare's dashboard reported successful deployment. The build gates completed: type check, 16 application tests, both 18-check database test paths and the production build. The database tests use ephemeral local databases; they do not change the Supabase project.
 
-These are the exact domain ownership records returned by the hosting service, not application credentials. Complete any GoDaddy account verification privately. Preserve existing root, www, mail and nameserver records. If a conflicting `franchise` record exists, inspect it before replacing it.
+The user saved the CNAME record. Both an authoritative DNS server and the public 1.1.1.1 resolver return the expected target. Pages reports **Active · SSL enabled** for `franchise.skillsville.in`. The live HTTPS `/auth` route was inspected, and the user reported successful Head Office sign-in on the final domain. The public ERP address is [franchise.skillsville.in](https://franchise.skillsville.in).
 
-After saving, refresh the custom-domain status and verify public DNS, active HTTPS and the `/auth` route. Do not bypass a certificate warning. The initial generated URL remains [Skills Ville ERP](https://skills-ville-franchise-erp.easy-lamb-5969.chatgpt.site).
+## GoDaddy DNS
 
-GoDaddy documents [adding CNAME records](https://www.godaddy.com/en-in/help/add-a-cname-record-19236?locale=en) and [adding TXT records](https://www.godaddy.com/en-uk/help/add-a-txt-record-19232). DNS changes may take time to propagate; readiness must be established by successful validation rather than a fixed waiting period.
+The public DNS check returned nameservers `ns53.domaincontrol.com` and `ns54.domaincontrol.com`. The user chose to add the record privately with guidance. After registering the hostname in Pages, use [GoDaddy Domain Portfolio](https://dcc.godaddy.com) → **skillsville.in → DNS → Add New Record**:
+
+| Type | Name | Value | TTL |
+| --- | --- | --- | --- |
+| CNAME | `franchise` | `skills-ville-franchise-erp.pages.dev` | Default |
+
+This Name is relative to `skillsville.in`. Complete any GoDaddy account verification privately. Preserve existing root, www, mail and nameserver records. If a conflicting `franchise` record exists, inspect it before replacing it.
+
+The earlier OpenAI Sites custom-domain registration was removed after the user chose Cloudflare. Do not add the previous `custom-domains.chatgpt.site` CNAME or OpenAI/Cloudflare-for-SaaS TXT verification records. The initial generated Sites address remains as a separate previously deployed copy; `.openai/hosting.json` records that hosting identity and is not the Cloudflare deployment configuration.
+
+After saving, refresh Pages custom-domain status and verify public DNS, active HTTPS and the `/auth` route. Do not bypass a certificate warning. A registered hostname alone does not establish a live custom domain. The Cloudflare subdomain setup supports retaining the existing DNS provider; nameserver transfer is unnecessary.
+
+References: [Cloudflare custom domains](https://developers.cloudflare.com/pages/configuration/custom-domains/), [Cloudflare SPA fallback](https://developers.cloudflare.com/pages/configuration/serving-pages/), [GoDaddy CNAME instructions](https://www.godaddy.com/en-in/help/add-a-cname-record-19236?locale=en).
