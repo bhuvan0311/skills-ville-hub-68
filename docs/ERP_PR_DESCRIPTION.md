@@ -4,6 +4,8 @@ The workspace covers admissions, student fees/instalments/receipts, discount app
 
 Payments use manual UPI/bank/cash references and explicit bank verification before issuing an immutable receipt. WhatsApp opens a reviewed click-to-chat draft; it never claims that a message was sent. No generative AI or business-data generation is used.
 
+The supplied Skills Ville SVG has its blank artboard margins removed, preserving the artwork and colours. Large brand placements, a muted navy login background, softer workspace surfaces and legible light/dark forms replace the small-logo presentation. Desktop and 320px/390px phone-frame layouts were reviewed, including password visibility, validation and navigation. The fixture-only design server has its own entry scan and dependency cache.
+
 Validation completed locally:
 
 - Production build and TypeScript check pass.

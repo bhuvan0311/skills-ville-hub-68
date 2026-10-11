@@ -1,18 +1,18 @@
 .sv-erp {
-  --sv-ink: #152b3b;
-  --sv-muted: #617381;
-  --sv-line: #e3e9ed;
-  --sv-green: #0f766e;
+  --sv-ink: #21383d;
+  --sv-muted: #607378;
+  --sv-line: #dce3df;
+  --sv-green: #365f52;
   font-family: Inter, system-ui, sans-serif;
   color: var(--sv-ink);
-  background: #f5f7f9;
+  background: #edf0ed;
   min-height: 100vh;
   display: flex;
   font-size: 14px;
 }
 .sv-sidebar {
   width: 250px;
-  background: #112b3b;
+  background: #1a3039;
   color: #e3edf3;
   position: fixed;
   inset: 0 auto 0 0;
@@ -22,17 +22,18 @@
 }
 .sv-brand {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding: 28px 24px;
+  gap: 14px;
+  padding: 24px 18px;
   text-decoration: none;
 }
 .sv-brand img {
-  height: 44px;
-  width: 44px;
-  border-radius: 10px;
-  background: #fff;
-  padding: 3px;
+  height: auto;
+  width: 100%;
+  border-radius: 12px;
+  background: #faf8f1;
+  padding: 12px 8px;
 }
 .sv-brand strong {
   display: block;
@@ -42,7 +43,7 @@
 }
 .sv-brand small {
   display: block;
-  font-size: 8px;
+  font-size: 9px;
   letter-spacing: 1.8px;
   margin-top: 5px;
   color: #98b6c7;
@@ -125,7 +126,7 @@
 }
 .sv-topbar {
   height: 76px;
-  background: #fff;
+  background: #fafbf9;
   border-bottom: 1px solid var(--sv-line);
   display: flex;
   align-items: center;
@@ -589,6 +590,9 @@
 .sv-menu {
   display: none;
 }
+.sv-mobile-brand {
+  display: none;
+}
 .sv-action-row {
   display: flex;
   gap: 12px;
@@ -746,17 +750,32 @@
     display: block;
   }
   .sv-topbar {
-    height: 65px;
+    height: auto;
+    min-height: 80px;
     padding: 0 16px;
+    gap: 10px;
+  }
+  .sv-mobile-brand {
+    display: block;
+    flex-shrink: 0;
+  }
+  .sv-mobile-brand img {
+    display: block;
+    width: 112px;
+    height: auto;
+    background: #faf8f1;
+    border-radius: 6px;
+    padding: 4px;
   }
   .sv-topbar > div:first-of-type {
     display: none;
   }
   .sv-topbar-right {
     margin-left: auto;
+    gap: 9px;
   }
   .sv-topbar select {
-    max-width: 205px;
+    max-width: 125px;
     font-size: 11px;
   }
   .sv-content {
@@ -844,5 +863,16 @@
   }
   .sv-student-progress .sv-tag {
     font-size: 8px;
+  }
+}
+@media (max-width: 360px) {
+  .sv-topbar {
+    padding-inline: 12px;
+  }
+  .sv-mobile-brand img {
+    width: 92px;
+  }
+  .sv-topbar select {
+    max-width: 85px;
   }
 }

@@ -524,9 +524,8 @@ export default function ErpWorkspace() {
           className="sv-brand"
           to={userRole === "parent" ? "/erp/parent" : "/erp/overview"}
         >
-          <img src={logo} alt="" />
+          <img src={logo} alt="Skills Ville — Future Ready" />
           <span>
-            <strong>Skills Ville</strong>
             <small>FRANCHISE WORKSPACE</small>
           </span>
         </Link>
@@ -619,6 +618,12 @@ export default function ErpWorkspace() {
           >
             <Menu size={21} />
           </button>
+          <Link
+            className="sv-mobile-brand"
+            to={userRole === "parent" ? "/erp/parent" : "/erp/overview"}
+          >
+            <img src={logo} alt="Skills Ville" />
+          </Link>
           <div>
             <span>Skills Ville</span>
             <ChevronRight size={13} />

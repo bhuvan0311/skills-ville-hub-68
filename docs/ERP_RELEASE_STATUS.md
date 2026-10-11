@@ -32,6 +32,14 @@ The unused Sites registration for `franchise.skillsville.in` was removed. The us
 
 GitHub's previously inspected jobs could not start because of an account billing lock. The user has been given the billing settings and recovery guide; no financial action or plan change was performed. Hosted checks must be rerun after the lock is resolved.
 
+## Branding follow-up
+
+The user's supplied Skills Ville SVG is now displayed with tight artwork bounds (`229 192 384 210`) instead of the original full Illustrator artboard. Its paths and colours are unchanged. The login has a large, proportional logo on a warm neutral panel, a subdued navy background, readable light/dark account forms and labelled password controls. The workspace and retained Head Office layouts have larger brand placements; the same supplied SVG is used for the favicon and subtle retained-page watermark.
+
+Type checking, the 16 frontend tests and production build passed. Desktop light/dark login rendering, empty-field feedback, password visibility, workspace navigation and 320px/390px phone-frame layouts were inspected. The phone frames had no horizontal overflow; the workspace used labelled sample fixtures with saving disabled. The separate design server now limits dependency scanning to its own entry and uses an isolated cache. Live-session pilot limits above remain unchanged.
+
+GitHub Actions still reports an account billing lock. Cloudflare's deployment gates run independently, so resolving GitHub billing is not required to serve this ERP. This task did not retry payments, change account plans or authorise charges.
+
 The user approved the temporary records and scoped cleanup in `docs/STAGING_CONCURRENCY_PLAN.md`. Verification from two different PostgreSQL connection IDs returned the same receipt and produced one payment for the 100-paise test claim. Of two four-unit stock deductions against a five-unit opening balance, one succeeded and one was rejected, leaving one unit. The request timestamps did not overlap: this establishes repeated-request safeguards, not simultaneous execution correctness. All temporary records were deleted within the approved scope; a subsequent count confirmed one real Auth account, its one Head Office role, and zero centre/student/payment/stock-movement records.
 
 Actual overlapping concurrent requests, role-specific Auth sessions, student-photo upload/download, and a complete business workflow remain to be verified before declaring unrestricted franchise rollout complete. No real payments or WhatsApp messages have been sent. Fees, royalty rules, centre records and payment details remain unset for Head Office to configure.

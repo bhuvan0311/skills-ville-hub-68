@@ -4,6 +4,8 @@ import path from "node:path";
 
 // Separate design review server. This config and its fixture aliases are never used by the production build.
 export default defineConfig({
+  cacheDir: "node_modules/.vite-qa",
+  optimizeDeps: { entries: ["qa/preview.html"] },
   plugins: [
     react(),
     {
